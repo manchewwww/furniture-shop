@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "context"
@@ -36,3 +36,4 @@ func (s *paymentService) PayByCard(ctx context.Context, in CardPayment) (string,
     if err := s.orders.UpdatePaymentStatus(ctx, in.OrderID, models.PaymentStatusPaid); err != nil { return models.PaymentStatusDeclined, err }
     return models.PaymentStatusPaid, nil
 }
+

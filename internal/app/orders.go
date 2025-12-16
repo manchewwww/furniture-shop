@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "context"
@@ -124,3 +124,4 @@ func (s *ordersService) AdminUpdateOrderStatus(ctx context.Context, orderID uint
     if !allowed[status] { return errors.New("invalid status") }
     return s.orders.UpdateStatus(ctx, orderID, status)
 }
+

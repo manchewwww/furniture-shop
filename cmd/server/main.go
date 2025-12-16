@@ -13,7 +13,7 @@ import (
     httpHandlers "furniture-shop/internal/adapter/http/handlers"
     httpRoutes "furniture-shop/internal/adapter/http/routes"
     infra "furniture-shop/internal/adapter/postgres"
-    "furniture-shop/internal/services"
+    app "furniture-shop/internal/app"
 )
 
 func main() {
@@ -27,8 +27,8 @@ func main() {
         log.Fatalf("Migration/Seed failed: %v", err)
     }
 
-    app := fiber.New()
-    app.Use(cors.New(cors.Config{
+    srv := fiber.New()
+    srv.Use(cors.New(cors.Config{
         AllowOrigins:     cfg.CORSOrigins,
         AllowCredentials: true,
         AllowMethods:     "GET,POST,PATCH,DELETE,PUT",
@@ -44,11 +44,11 @@ func main() {
     optRepo := infra.NewProductOptionRepository(db)
     orderRepo := infra.NewOrderRepository(db)
 
-    authSvc := services.NewAuthService(userRepo, cfg.JWTSecret)
-    catalogSvc := services.NewCatalogService(deptRepo, catRepo, prodRepo)
-    ordersSvc := services.NewOrdersService(userRepo, orderRepo, prodRepo)
-    adminSvc := services.NewAdminService(deptRepo, catRepo, prodRepo, optRepo)
-    paymentsSvc := services.NewPaymentService(orderRepo)
+    authSvc := app.NewAuthService(userRepo, cfg.JWTSecret)
+    catalogSvc := app.NewCatalogService(deptRepo, catRepo, prodRepo)
+    ordersSvc := app.NewOrdersService(userRepo, orderRepo, prodRepo)
+    adminSvc := app.NewAdminService(deptRepo, catRepo, prodRepo, optRepo)
+    paymentsSvc := app.NewPaymentService(orderRepo)
 
     authHandlers := httpHandlers.NewAuthHandler(authSvc)
     catalogHandlers := httpHandlers.NewCatalogHandler(catalogSvc)
@@ -56,13 +56,15 @@ func main() {
     adminHandlers := httpHandlers.NewAdminHandler(adminSvc)
     paymentsHandlers := httpHandlers.NewPaymentsHandler(paymentsSvc)
 
-    httpRoutes.Register(app, cfg, authHandlers, catalogHandlers, ordersHandlers, adminHandlers, paymentsHandlers)
+    httpRoutes.Register(srv, cfg, authHandlers, catalogHandlers, ordersHandlers, adminHandlers, paymentsHandlers)
 
     port := os.Getenv("PORT")
     if port == "" {
         port = "8080"
     }
     log.Printf("Server listening on :%s", port)
-    log.Fatal(app.Listen(":" + port))
+    log.Fatal(srv.Listen(":" + port))
 }
+
+
 

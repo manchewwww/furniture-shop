@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "context"
@@ -59,3 +59,4 @@ func (s *adminService) ListProductOptions(ctx context.Context, productID *uint) 
 func (s *adminService) CreateProductOption(ctx context.Context, o *models.ProductOption) error { return s.options.Create(ctx, o) }
 func (s *adminService) UpdateProductOption(ctx context.Context, id uint, o models.ProductOption) error { return s.options.Update(ctx, id, o) }
 func (s *adminService) DeleteProductOption(ctx context.Context, id uint) error { return s.options.Delete(ctx, id) }
+

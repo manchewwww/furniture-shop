@@ -3,17 +3,17 @@ package handlers
 import (
     "fmt"
     "github.com/gofiber/fiber/v2"
-    "furniture-shop/internal/services"
+    app "furniture-shop/internal/app"
 )
 
-type OrdersHandler struct { svc services.OrdersService }
+type OrdersHandler struct { svc app.OrdersService }
 
-func NewOrdersHandler(svc services.OrdersService) *OrdersHandler { return &OrdersHandler{svc: svc} }
+func NewOrdersHandler(svc app.OrdersService) *OrdersHandler { return &OrdersHandler{svc: svc} }
 
 type orderItemIn struct {
     ProductID uint                     `json:"product_id"`
     Quantity  int                      `json:"quantity"`
-    Options   []services.SelectedOption `json:"options"`
+    Options   []app.SelectedOption `json:"options"`
 }
 type createOrderDTO struct {
     UserID        *uint         `json:"user_id"`
@@ -29,9 +29,9 @@ func (h *OrdersHandler) CreateOrder() fiber.Handler {
     return func(c *fiber.Ctx) error {
         var in createOrderDTO
         if err := c.BodyParser(&in); err != nil { return c.Status(400).JSON(fiber.Map{"message":"invalid request"}) }
-        items := make([]services.CreateOrderItem, 0, len(in.Items))
-        for _, it := range in.Items { items = append(items, services.CreateOrderItem{ProductID: it.ProductID, Quantity: it.Quantity, Options: it.Options}) }
-        order, err := h.svc.CreateOrder(c.Context(), services.CreateOrderInput{
+        items := make([]app.CreateOrderItem, 0, len(in.Items))
+        for _, it := range in.Items { items = append(items, app.CreateOrderItem{ProductID: it.ProductID, Quantity: it.Quantity, Options: it.Options}) }
+        order, err := h.svc.CreateOrder(c.Context(), app.CreateOrderInput{
             UserID: in.UserID, Name: in.Name, Email: in.Email, Address: in.Address, Phone: in.Phone,
             Items: items, PaymentMethod: in.PaymentMethod,
         })
@@ -88,5 +88,10 @@ func (h *OrdersHandler) AdminUpdateOrderStatus() fiber.Handler {
         return c.JSON(fiber.Map{"message":"updated"})
     }
 }
+
+
+
+
+
 
 

@@ -4,12 +4,12 @@ import (
     "fmt"
     "github.com/gofiber/fiber/v2"
     models "furniture-shop/internal/domain/entity"
-    "furniture-shop/internal/services"
+    app "furniture-shop/internal/app"
 )
 
-type AdminHandler struct { svc services.AdminService }
+type AdminHandler struct { svc app.AdminService }
 
-func NewAdminHandler(svc services.AdminService) *AdminHandler { return &AdminHandler{svc: svc} }
+func NewAdminHandler(svc app.AdminService) *AdminHandler { return &AdminHandler{svc: svc} }
 
 // Departments
 func (h *AdminHandler) ListDepartments() fiber.Handler {
@@ -85,3 +85,11 @@ func (h *AdminHandler) UpdateProductOption() fiber.Handler {
 func (h *AdminHandler) DeleteProductOption() fiber.Handler {
     return func(c *fiber.Ctx) error { var id uint; _, _ = fmt.Sscan(c.Params("id"), &id); _ = h.svc.DeleteProductOption(c.Context(), id); return c.JSON(fiber.Map{"message":"deleted"}) }
 }
+
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "encoding/json"
@@ -62,4 +62,5 @@ func CalculateOrderProductionTimeWithWorkload(items []models.OrderItem, workload
     if workloadCount >= 10 { max += 3 } else if workloadCount >= 5 { max += 1 }
     return max
 }
+
 

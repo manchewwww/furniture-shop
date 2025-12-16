@@ -5,14 +5,14 @@ import (
     "github.com/gofiber/fiber/v2"
 
     models "furniture-shop/internal/domain/entity"
-    "furniture-shop/internal/services"
+    app "furniture-shop/internal/app"
 )
 
 type CatalogHandler struct {
-    svc services.CatalogService
+    svc app.CatalogService
 }
 
-func NewCatalogHandler(svc services.CatalogService) *CatalogHandler { return &CatalogHandler{svc: svc} }
+func NewCatalogHandler(svc app.CatalogService) *CatalogHandler { return &CatalogHandler{svc: svc} }
 
 func (h *CatalogHandler) GetDepartments() fiber.Handler {
     return func(c *fiber.Ctx) error {
@@ -67,3 +67,7 @@ func (h *CatalogHandler) GetProductRecommendations() fiber.Handler {
         return c.JSON(rec)
     }
 }
+
+
+
+

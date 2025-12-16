@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "context"
@@ -53,3 +53,4 @@ func (s *catalogService) RecommendProducts(ctx context.Context, productID uint, 
     if limit <= 0 { limit = 4 }
     return s.products.ListRecommendations(ctx, p, limit)
 }
+

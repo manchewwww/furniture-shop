@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     models "furniture-shop/internal/domain/entity"
@@ -27,4 +27,5 @@ func CalculateUnitPriceWithOptions(base models.Product, options []models.Product
     base.Options = options
     return CalculateUnitPrice(base, selected)
 }
+
 

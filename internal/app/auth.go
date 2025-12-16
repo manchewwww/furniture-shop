@@ -1,4 +1,4 @@
-package services
+package app
 
 import (
     "context"
@@ -51,3 +51,4 @@ func (s *authService) Authenticate(ctx context.Context, email, password string) 
 func (s *authService) CreateUser(ctx context.Context, u *models.User) error {
     return s.users.Create(ctx, u)
 }
+

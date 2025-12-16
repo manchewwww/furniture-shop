@@ -5,14 +5,14 @@ import (
     "github.com/gofiber/fiber/v2"
 
     models "furniture-shop/internal/domain/entity"
-    "furniture-shop/internal/services"
+    app "furniture-shop/internal/app"
 )
 
 type AuthHandler struct {
-    svc services.AuthService
+    svc app.AuthService
 }
 
-func NewAuthHandler(svc services.AuthService) *AuthHandler { return &AuthHandler{svc: svc} }
+func NewAuthHandler(svc app.AuthService) *AuthHandler { return &AuthHandler{svc: svc} }
 
 type registerDTO struct {
     Name     string `json:"name"`
@@ -77,3 +77,7 @@ func (h *AuthHandler) Me() fiber.Handler {
         })
     }
 }
+
+
+
+
