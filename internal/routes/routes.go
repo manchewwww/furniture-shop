@@ -8,7 +8,7 @@ import (
     "furniture-shop/internal/middleware"
 )
 
-func Register(app *fiber.App, cfg *config.Config, auth *handlers.AuthHandler, catalog *handlers.CatalogHandler) {
+func Register(app *fiber.App, cfg *config.Config, auth *handlers.AuthHandler, catalog *handlers.CatalogHandler, orders *handlers.OrdersHandler, admin *handlers.AdminHandler, payments *handlers.PaymentsHandler) {
     api := app.Group("/api")
 
     // Auth
@@ -24,38 +24,38 @@ func Register(app *fiber.App, cfg *config.Config, auth *handlers.AuthHandler, ca
     api.Get("/products/search", catalog.SearchProducts())
 
     // Orders (public create)
-    api.Post("/orders", handlers.CreateOrder)
-    api.Post("/payments/card", handlers.PayByCard)
+    api.Post("/orders", orders.CreateOrder())
+    api.Post("/payments/card", payments.PayByCard())
 
     // Authenticated user routes
     authGroup := api.Group("/user", middleware.JWTAuth(cfg))
     authGroup.Get("/me", auth.Me())
-    authGroup.Get("/orders", handlers.UserOrders)
-    authGroup.Get("/orders/:id", handlers.UserOrderDetails)
+    authGroup.Get("/orders", orders.UserOrders())
+    authGroup.Get("/orders/:id", orders.UserOrderDetails())
 
     // Admin routes
-    admin := api.Group("/admin", middleware.JWTAuth(cfg), middleware.RequireAdmin)
-    admin.Get("/departments", handlers.AdminListDepartments)
-    admin.Post("/departments", handlers.AdminCreateDepartment)
-    admin.Put("/departments/:id", handlers.AdminUpdateDepartment)
-    admin.Delete("/departments/:id", handlers.AdminDeleteDepartment)
+    adminGroup := api.Group("/admin", middleware.JWTAuth(cfg), middleware.RequireAdmin)
+    adminGroup.Get("/departments", admin.ListDepartments())
+    adminGroup.Post("/departments", admin.CreateDepartment())
+    adminGroup.Put("/departments/:id", admin.UpdateDepartment())
+    adminGroup.Delete("/departments/:id", admin.DeleteDepartment())
 
-    admin.Get("/categories", handlers.AdminListCategories)
-    admin.Post("/categories", handlers.AdminCreateCategory)
-    admin.Put("/categories/:id", handlers.AdminUpdateCategory)
-    admin.Delete("/categories/:id", handlers.AdminDeleteCategory)
+    adminGroup.Get("/categories", admin.ListCategories())
+    adminGroup.Post("/categories", admin.CreateCategory())
+    adminGroup.Put("/categories/:id", admin.UpdateCategory())
+    adminGroup.Delete("/categories/:id", admin.DeleteCategory())
 
-    admin.Get("/products", handlers.AdminListProducts)
-    admin.Post("/products", handlers.AdminCreateProduct)
-    admin.Put("/products/:id", handlers.AdminUpdateProduct)
-    admin.Delete("/products/:id", handlers.AdminDeleteProduct)
+    adminGroup.Get("/products", admin.ListProducts())
+    adminGroup.Post("/products", admin.CreateProduct())
+    adminGroup.Put("/products/:id", admin.UpdateProduct())
+    adminGroup.Delete("/products/:id", admin.DeleteProduct())
 
-    admin.Get("/product_options", handlers.AdminListProductOptions)
-    admin.Post("/product_options", handlers.AdminCreateProductOption)
-    admin.Put("/product_options/:id", handlers.AdminUpdateProductOption)
-    admin.Delete("/product_options/:id", handlers.AdminDeleteProductOption)
+    adminGroup.Get("/product_options", admin.ListProductOptions())
+    adminGroup.Post("/product_options", admin.CreateProductOption())
+    adminGroup.Put("/product_options/:id", admin.UpdateProductOption())
+    adminGroup.Delete("/product_options/:id", admin.DeleteProductOption())
 
-    admin.Get("/orders", handlers.AdminListOrders)
-    admin.Patch("/orders/:id/status", handlers.AdminUpdateOrderStatus)
+    adminGroup.Get("/orders", orders.AdminListOrders())
+    adminGroup.Patch("/orders/:id/status", orders.AdminUpdateOrderStatus())
 }
 

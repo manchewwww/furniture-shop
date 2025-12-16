@@ -54,3 +54,12 @@ func MarshalSelectedOptions(selected []SelectedOption) string {
     return string(b)
 }
 
+
+// CalculateOrderProductionTimeWithWorkload is a DB-free variant used by services layer
+func CalculateOrderProductionTimeWithWorkload(items []models.OrderItem, workloadCount int64) int {
+    max := 0
+    for _, it := range items { if it.CalculatedProductionTimeDays > max { max = it.CalculatedProductionTimeDays } }
+    if workloadCount >= 10 { max += 3 } else if workloadCount >= 5 { max += 1 }
+    return max
+}
+

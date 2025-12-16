@@ -41,14 +41,22 @@ func main() {
     deptRepo := infra.NewDepartmentRepository(db)
     catRepo := infra.NewCategoryRepository(db)
     prodRepo := infra.NewProductRepository(db)
+    optRepo := infra.NewProductOptionRepository(db)
+    orderRepo := infra.NewOrderRepository(db)
 
     authSvc := services.NewAuthService(userRepo, cfg.JWTSecret)
     catalogSvc := services.NewCatalogService(deptRepo, catRepo, prodRepo)
+    ordersSvc := services.NewOrdersService(userRepo, orderRepo, prodRepo)
+    adminSvc := services.NewAdminService(deptRepo, catRepo, prodRepo, optRepo)
+    paymentsSvc := services.NewPaymentService(orderRepo)
 
     authHandlers := handlers.NewAuthHandler(authSvc)
     catalogHandlers := handlers.NewCatalogHandler(catalogSvc)
+    ordersHandlers := handlers.NewOrdersHandler(ordersSvc)
+    adminHandlers := handlers.NewAdminHandler(adminSvc)
+    paymentsHandlers := handlers.NewPaymentsHandler(paymentsSvc)
 
-    routes.Register(app, cfg, authHandlers, catalogHandlers)
+    routes.Register(app, cfg, authHandlers, catalogHandlers, ordersHandlers, adminHandlers, paymentsHandlers)
 
     port := os.Getenv("PORT")
     if port == "" {

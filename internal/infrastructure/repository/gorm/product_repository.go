@@ -52,3 +52,21 @@ func (r *ProductRepository) ListRecommendations(ctx context.Context, p *models.P
     return rec, nil
 }
 
+func (r *ProductRepository) ListAll(ctx context.Context) ([]models.Product, error) {
+    var items []models.Product
+    if err := r.db.WithContext(ctx).Find(&items).Error; err != nil { return nil, err }
+    return items, nil
+}
+
+func (r *ProductRepository) Create(ctx context.Context, p *models.Product) error {
+    return r.db.WithContext(ctx).Create(p).Error
+}
+
+func (r *ProductRepository) Update(ctx context.Context, id uint, p models.Product) error {
+    p.ID = 0
+    return r.db.WithContext(ctx).Model(&models.Product{}).Where("id = ?", id).Updates(p).Error
+}
+
+func (r *ProductRepository) Delete(ctx context.Context, id uint) error {
+    return r.db.WithContext(ctx).Delete(&models.Product{}, id).Error
+}
