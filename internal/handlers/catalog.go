@@ -1,59 +1,70 @@
 package handlers
 
 import (
+    "strconv"
     "github.com/gofiber/fiber/v2"
-    "gorm.io/gorm"
 
-    "furniture-shop/internal/database"
     "furniture-shop/internal/models"
+    "furniture-shop/internal/services"
 )
 
-func GetDepartments(c *fiber.Ctx) error {
-    var depts []models.Department
-    if err := database.DB.Find(&depts).Error; err != nil { return c.Status(500).JSON(fiber.Map{"message":"Грешка"}) }
-    return c.JSON(depts)
+type CatalogHandler struct {
+    svc services.CatalogService
 }
 
-func GetCategoriesByDepartment(c *fiber.Ctx) error {
-    var cats []models.Category
-    if err := database.DB.Where("department_id = ?", c.Params("id")).Find(&cats).Error; err != nil { return c.Status(500).JSON(fiber.Map{"message":"Грешка"}) }
-    return c.JSON(cats)
-}
+func NewCatalogHandler(svc services.CatalogService) *CatalogHandler { return &CatalogHandler{svc: svc} }
 
-func GetProductsByCategory(c *fiber.Ctx) error {
-    var products []models.Product
-    if err := database.DB.Where("category_id = ?", c.Params("id")).Find(&products).Error; err != nil { return c.Status(500).JSON(fiber.Map{"message":"Грешка"}) }
-    return c.JSON(products)
-}
-
-func GetProductDetails(c *fiber.Ctx) error {
-    var p models.Product
-    if err := database.DB.Preload("Options").First(&p, c.Params("id")).Error; err != nil {
-        if err == gorm.ErrRecordNotFound { return c.Status(404).JSON(fiber.Map{"message":"Продуктът не е намерен"}) }
-        return c.Status(500).JSON(fiber.Map{"message":"Грешка"})
+func (h *CatalogHandler) GetDepartments() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        depts, err := h.svc.ListDepartments(c.Context())
+        if err != nil { return c.Status(500).JSON(fiber.Map{"message":"server error"}) }
+        return c.JSON(depts)
     }
-    return c.JSON(p)
 }
 
-func SearchProducts(c *fiber.Ctx) error {
-    q := c.Query("query")
-    var items []models.Product
-    if q == "" { return c.JSON([]models.Product{}) }
-    like := "%" + q + "%"
-    if err := database.DB.Where("name ILIKE ? OR short_description ILIKE ?", like, like).Limit(50).Find(&items).Error; err != nil {
-        return c.Status(500).JSON(fiber.Map{"message":"Грешка"})
+func (h *CatalogHandler) GetCategoriesByDepartment() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        id, _ := strconv.ParseUint(c.Params("id"), 10, 64)
+        cats, err := h.svc.ListCategoriesByDepartment(c.Context(), uint(id))
+        if err != nil { return c.Status(500).JSON(fiber.Map{"message":"server error"}) }
+        return c.JSON(cats)
     }
-    return c.JSON(items)
 }
 
-func GetProductRecommendations(c *fiber.Ctx) error {
-    // simple: same category top 4 by id
-    var p models.Product
-    if err := database.DB.First(&p, c.Params("id")).Error; err != nil { return c.Status(404).JSON(fiber.Map{"message":"Не е намерен"}) }
-    var rec []models.Product
-    if err := database.DB.Where("category_id = ? AND id <> ?", p.CategoryID, p.ID).Limit(4).Find(&rec).Error; err != nil {
-        return c.Status(500).JSON(fiber.Map{"message":"Грешка"})
+func (h *CatalogHandler) GetProductsByCategory() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        id, _ := strconv.ParseUint(c.Params("id"), 10, 64)
+        products, err := h.svc.ListProductsByCategory(c.Context(), uint(id))
+        if err != nil { return c.Status(500).JSON(fiber.Map{"message":"server error"}) }
+        return c.JSON(products)
     }
-    return c.JSON(rec)
+}
+
+func (h *CatalogHandler) GetProductDetails() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        id, _ := strconv.ParseUint(c.Params("id"), 10, 64)
+        p, err := h.svc.GetProduct(c.Context(), uint(id))
+        if err != nil { return c.Status(404).JSON(fiber.Map{"message":"not found"}) }
+        return c.JSON(p)
+    }
+}
+
+func (h *CatalogHandler) SearchProducts() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        q := c.Query("query")
+        if q == "" { return c.JSON([]models.Product{}) }
+        items, err := h.svc.SearchProducts(c.Context(), q, 50)
+        if err != nil { return c.Status(500).JSON(fiber.Map{"message":"server error"}) }
+        return c.JSON(items)
+    }
+}
+
+func (h *CatalogHandler) GetProductRecommendations() fiber.Handler {
+    return func(c *fiber.Ctx) error {
+        id, _ := strconv.ParseUint(c.Params("id"), 10, 64)
+        rec, err := h.svc.RecommendProducts(c.Context(), uint(id), 4)
+        if err != nil { return c.Status(500).JSON(fiber.Map{"message":"server error"}) }
+        return c.JSON(rec)
+    }
 }
 

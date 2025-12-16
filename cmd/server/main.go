@@ -10,7 +10,10 @@ import (
 
     "furniture-shop/internal/config"
     "furniture-shop/internal/database"
+    "furniture-shop/internal/handlers"
+    infra "furniture-shop/internal/infrastructure/repository/gorm"
     "furniture-shop/internal/routes"
+    "furniture-shop/internal/services"
 )
 
 func main() {
@@ -32,7 +35,20 @@ func main() {
         AllowHeaders:     "Authorization,Content-Type",
     }))
 
-    routes.Register(app, cfg)
+    // Wire dependencies (repositories -> services -> handlers)
+    db := database.DB
+    userRepo := infra.NewUserRepository(db)
+    deptRepo := infra.NewDepartmentRepository(db)
+    catRepo := infra.NewCategoryRepository(db)
+    prodRepo := infra.NewProductRepository(db)
+
+    authSvc := services.NewAuthService(userRepo, cfg.JWTSecret)
+    catalogSvc := services.NewCatalogService(deptRepo, catRepo, prodRepo)
+
+    authHandlers := handlers.NewAuthHandler(authSvc)
+    catalogHandlers := handlers.NewCatalogHandler(catalogSvc)
+
+    routes.Register(app, cfg, authHandlers, catalogHandlers)
 
     port := os.Getenv("PORT")
     if port == "" {

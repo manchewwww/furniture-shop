@@ -8,30 +8,30 @@ import (
     "furniture-shop/internal/middleware"
 )
 
-func Register(app *fiber.App, cfg *config.Config) {
+func Register(app *fiber.App, cfg *config.Config, auth *handlers.AuthHandler, catalog *handlers.CatalogHandler) {
     api := app.Group("/api")
 
     // Auth
-    api.Post("/auth/register", handlers.Register(cfg))
-    api.Post("/auth/login", handlers.Login(cfg))
+    api.Post("/auth/register", auth.Register())
+    api.Post("/auth/login", auth.Login())
 
     // Catalog & search
-    api.Get("/departments", handlers.GetDepartments)
-    api.Get("/departments/:id/categories", handlers.GetCategoriesByDepartment)
-    api.Get("/categories/:id/products", handlers.GetProductsByCategory)
-    api.Get("/products/:id", handlers.GetProductDetails)
-    api.Get("/products/:id/recommendations", handlers.GetProductRecommendations)
-    api.Get("/products/search", handlers.SearchProducts)
+    api.Get("/departments", catalog.GetDepartments())
+    api.Get("/departments/:id/categories", catalog.GetCategoriesByDepartment())
+    api.Get("/categories/:id/products", catalog.GetProductsByCategory())
+    api.Get("/products/:id", catalog.GetProductDetails())
+    api.Get("/products/:id/recommendations", catalog.GetProductRecommendations())
+    api.Get("/products/search", catalog.SearchProducts())
 
     // Orders (public create)
     api.Post("/orders", handlers.CreateOrder)
     api.Post("/payments/card", handlers.PayByCard)
 
     // Authenticated user routes
-    auth := api.Group("/user", middleware.JWTAuth(cfg))
-    auth.Get("/me", handlers.Me())
-    auth.Get("/orders", handlers.UserOrders)
-    auth.Get("/orders/:id", handlers.UserOrderDetails)
+    authGroup := api.Group("/user", middleware.JWTAuth(cfg))
+    authGroup.Get("/me", auth.Me())
+    authGroup.Get("/orders", handlers.UserOrders)
+    authGroup.Get("/orders/:id", handlers.UserOrderDetails)
 
     // Admin routes
     admin := api.Group("/admin", middleware.JWTAuth(cfg), middleware.RequireAdmin)

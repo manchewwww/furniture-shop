@@ -1,0 +1,54 @@
+package gormrepo
+
+import (
+    "context"
+
+    "gorm.io/gorm"
+
+    "furniture-shop/internal/domain/repository"
+    "furniture-shop/internal/models"
+)
+
+type ProductRepository struct { db *gorm.DB }
+
+func NewProductRepository(db *gorm.DB) repository.ProductRepository { return &ProductRepository{db: db} }
+
+func (r *ProductRepository) ListByCategory(ctx context.Context, categoryID uint) ([]models.Product, error) {
+    var out []models.Product
+    if err := r.db.WithContext(ctx).Where("category_id = ?", categoryID).Find(&out).Error; err != nil {
+        return nil, err
+    }
+    return out, nil
+}
+
+func (r *ProductRepository) FindByID(ctx context.Context, id uint) (*models.Product, error) {
+    var p models.Product
+    if err := r.db.WithContext(ctx).Preload("Options").First(&p, id).Error; err != nil {
+        return nil, err
+    }
+    return &p, nil
+}
+
+func (r *ProductRepository) Search(ctx context.Context, query string, limit int) ([]models.Product, error) {
+    var items []models.Product
+    like := "%" + query + "%"
+    if err := r.db.WithContext(ctx).
+        Where("name ILIKE ? OR short_description ILIKE ?", like, like).
+        Limit(limit).
+        Find(&items).Error; err != nil {
+        return nil, err
+    }
+    return items, nil
+}
+
+func (r *ProductRepository) ListRecommendations(ctx context.Context, p *models.Product, limit int) ([]models.Product, error) {
+    var rec []models.Product
+    if err := r.db.WithContext(ctx).
+        Where("category_id = ? AND id <> ?", p.CategoryID, p.ID).
+        Limit(limit).
+        Find(&rec).Error; err != nil {
+        return nil, err
+    }
+    return rec, nil
+}
+
