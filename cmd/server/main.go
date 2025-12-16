@@ -10,9 +10,9 @@ import (
 
     "furniture-shop/internal/config"
     "furniture-shop/internal/database"
-    "furniture-shop/internal/handlers"
-    infra "furniture-shop/internal/infrastructure/repository/gorm"
-    "furniture-shop/internal/routes"
+    httpHandlers "furniture-shop/internal/adapter/http/handlers"
+    httpRoutes "furniture-shop/internal/adapter/http/routes"
+    infra "furniture-shop/internal/adapter/postgres"
     "furniture-shop/internal/services"
 )
 
@@ -50,13 +50,13 @@ func main() {
     adminSvc := services.NewAdminService(deptRepo, catRepo, prodRepo, optRepo)
     paymentsSvc := services.NewPaymentService(orderRepo)
 
-    authHandlers := handlers.NewAuthHandler(authSvc)
-    catalogHandlers := handlers.NewCatalogHandler(catalogSvc)
-    ordersHandlers := handlers.NewOrdersHandler(ordersSvc)
-    adminHandlers := handlers.NewAdminHandler(adminSvc)
-    paymentsHandlers := handlers.NewPaymentsHandler(paymentsSvc)
+    authHandlers := httpHandlers.NewAuthHandler(authSvc)
+    catalogHandlers := httpHandlers.NewCatalogHandler(catalogSvc)
+    ordersHandlers := httpHandlers.NewOrdersHandler(ordersSvc)
+    adminHandlers := httpHandlers.NewAdminHandler(adminSvc)
+    paymentsHandlers := httpHandlers.NewPaymentsHandler(paymentsSvc)
 
-    routes.Register(app, cfg, authHandlers, catalogHandlers, ordersHandlers, adminHandlers, paymentsHandlers)
+    httpRoutes.Register(app, cfg, authHandlers, catalogHandlers, ordersHandlers, adminHandlers, paymentsHandlers)
 
     port := os.Getenv("PORT")
     if port == "" {

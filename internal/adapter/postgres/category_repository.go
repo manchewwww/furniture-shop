@@ -6,7 +6,7 @@ import (
     "gorm.io/gorm"
 
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type CategoryRepository struct { db *gorm.DB }

@@ -4,7 +4,7 @@ import (
     "github.com/gofiber/fiber/v2"
 
     "furniture-shop/internal/config"
-    "furniture-shop/internal/handlers"
+    "furniture-shop/internal/adapter/http/handlers"
     "furniture-shop/internal/middleware"
 )
 
@@ -23,7 +23,7 @@ func Register(app *fiber.App, cfg *config.Config, auth *handlers.AuthHandler, ca
     api.Get("/products/:id/recommendations", catalog.GetProductRecommendations())
     api.Get("/products/search", catalog.SearchProducts())
 
-    // Orders (public create)
+    // Orders (public create) and payments
     api.Post("/orders", orders.CreateOrder())
     api.Post("/payments/card", payments.PayByCard())
 

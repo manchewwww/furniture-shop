@@ -4,7 +4,7 @@ import (
     "context"
 
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type CatalogService interface {
@@ -53,4 +53,3 @@ func (s *catalogService) RecommendProducts(ctx context.Context, productID uint, 
     if limit <= 0 { limit = 4 }
     return s.products.ListRecommendations(ctx, p, limit)
 }
-

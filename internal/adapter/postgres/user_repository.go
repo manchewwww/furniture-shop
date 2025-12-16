@@ -6,7 +6,7 @@ import (
     "gorm.io/gorm"
 
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type UserRepository struct { db *gorm.DB }
@@ -32,4 +32,3 @@ func (r *UserRepository) FindByID(ctx context.Context, id uint) (*models.User, e
     }
     return &u, nil
 }
-

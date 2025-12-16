@@ -2,7 +2,7 @@ package repository
 
 import (
     "context"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type UserRepository interface {
@@ -10,4 +10,3 @@ type UserRepository interface {
     FindByEmail(ctx context.Context, email string) (*models.User, error)
     FindByID(ctx context.Context, id uint) (*models.User, error)
 }
-

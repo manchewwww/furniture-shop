@@ -6,7 +6,7 @@ import (
     "math/rand"
     "time"
 
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 func seedData() error {

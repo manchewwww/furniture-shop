@@ -4,7 +4,7 @@ import (
     "context"
     "github.com/gofiber/fiber/v2"
 
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
     "furniture-shop/internal/services"
 )
 

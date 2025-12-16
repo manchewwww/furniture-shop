@@ -8,7 +8,7 @@ import (
     "gorm.io/gorm"
 
     "furniture-shop/internal/config"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 var DB *gorm.DB

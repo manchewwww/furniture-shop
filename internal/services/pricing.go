@@ -1,7 +1,7 @@
 package services
 
 import (
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 // Calculate unit price with selected option price modifiers

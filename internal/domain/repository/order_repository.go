@@ -2,7 +2,7 @@ package repository
 
 import (
     "context"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type OrderRepository interface {
@@ -15,4 +15,3 @@ type OrderRepository interface {
     CountByStatus(ctx context.Context, status string) (int64, error)
     UpdatePaymentStatus(ctx context.Context, id uint, status string) error
 }
-

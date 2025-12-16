@@ -6,7 +6,7 @@ import (
     "fmt"
 
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type OrderItemOption = SelectedOption

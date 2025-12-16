@@ -2,7 +2,7 @@ package repository
 
 import (
     "context"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type CategoryRepository interface {

@@ -8,7 +8,7 @@ import (
     "github.com/golang-jwt/jwt/v5"
 
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type AuthService interface {

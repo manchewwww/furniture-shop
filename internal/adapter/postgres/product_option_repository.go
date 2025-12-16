@@ -4,7 +4,7 @@ import (
     "context"
     "gorm.io/gorm"
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type ProductOptionRepository struct { db *gorm.DB }
@@ -33,4 +33,3 @@ func (r *ProductOptionRepository) Update(ctx context.Context, id uint, o models.
 func (r *ProductOptionRepository) Delete(ctx context.Context, id uint) error {
     return r.db.WithContext(ctx).Delete(&models.ProductOption{}, id).Error
 }
-

@@ -2,7 +2,7 @@ package repository
 
 import (
     "context"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type ProductOptionRepository interface {
@@ -11,4 +11,3 @@ type ProductOptionRepository interface {
     Update(ctx context.Context, id uint, o models.ProductOption) error
     Delete(ctx context.Context, id uint) error
 }
-

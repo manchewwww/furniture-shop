@@ -4,7 +4,7 @@ import (
     "context"
     "gorm.io/gorm"
     "furniture-shop/internal/domain/repository"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type OrderRepository struct { db *gorm.DB }
@@ -61,4 +61,3 @@ func (r *OrderRepository) CountByStatus(ctx context.Context, status string) (int
 func (r *OrderRepository) UpdatePaymentStatus(ctx context.Context, id uint, status string) error {
     return r.db.WithContext(ctx).Model(&models.Order{}).Where("id = ?", id).Update("payment_status", status).Error
 }
-

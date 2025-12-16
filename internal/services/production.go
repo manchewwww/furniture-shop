@@ -6,7 +6,7 @@ import (
     "strings"
 
     "furniture-shop/internal/database"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
 )
 
 type SelectedOption struct {

@@ -29,4 +29,3 @@ func (h *PaymentsHandler) PayByCard() fiber.Handler {
         return c.JSON(fiber.Map{"message":"payment accepted", "payment_status": status})
     }
 }
-

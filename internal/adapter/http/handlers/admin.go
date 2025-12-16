@@ -3,7 +3,7 @@ package handlers
 import (
     "fmt"
     "github.com/gofiber/fiber/v2"
-    "furniture-shop/internal/models"
+    models "furniture-shop/internal/domain/entity"
     "furniture-shop/internal/services"
 )
 
@@ -85,4 +85,3 @@ func (h *AdminHandler) UpdateProductOption() fiber.Handler {
 func (h *AdminHandler) DeleteProductOption() fiber.Handler {
     return func(c *fiber.Ctx) error { var id uint; _, _ = fmt.Sscan(c.Params("id"), &id); _ = h.svc.DeleteProductOption(c.Context(), id); return c.JSON(fiber.Map{"message":"deleted"}) }
 }
-
