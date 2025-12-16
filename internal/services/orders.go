@@ -48,6 +48,8 @@ func NewOrdersService(users repository.UserRepository, orders repository.OrderRe
 func (s *ordersService) CreateOrder(ctx context.Context, in CreateOrderInput) (*models.Order, error) {
     if len(in.Items) == 0 { return nil, errors.New("items required") }
     if in.PaymentMethod == "" { return nil, errors.New("payment method required") }
+    // normalize known method aliases to constants
+    if in.PaymentMethod == "card" { in.PaymentMethod = models.PaymentMethodCard }
 
     var user *models.User
     var err error
@@ -65,7 +67,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in CreateOrderInput) (*
         }
     }
 
-    order := &models.Order{UserID: user.ID, Status: "нов", PaymentMethod: in.PaymentMethod, PaymentStatus: "очаква се"}
+    order := &models.Order{UserID: user.ID, Status: models.OrderStatusNew, PaymentMethod: in.PaymentMethod, PaymentStatus: models.PaymentStatusPending}
     var items []models.OrderItem
     var total float64
     for _, it := range in.Items {
@@ -87,7 +89,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in CreateOrderInput) (*
     }
     order.TotalPrice = total
     // compute overall production time using workload count from repo
-    workload, _ := s.orders.CountByStatus(ctx, "в производство")
+    workload, _ := s.orders.CountByStatus(ctx, models.OrderStatusInProduction)
     order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
     order.Items = items
 
@@ -111,8 +113,14 @@ func (s *ordersService) AdminListOrders(ctx context.Context, status string) ([]m
 }
 
 func (s *ordersService) AdminUpdateOrderStatus(ctx context.Context, orderID uint, status string) error {
-    allowed := map[string]bool{"нов":true,"обработва се":true,"в производство":true,"изпратена":true,"доставена":true,"отказана":true}
+    allowed := map[string]bool{
+        models.OrderStatusNew: true,
+        models.OrderStatusProcessing: true,
+        models.OrderStatusInProduction: true,
+        models.OrderStatusShipped: true,
+        models.OrderStatusDelivered: true,
+        models.OrderStatusCancelled: true,
+    }
     if !allowed[status] { return errors.New("invalid status") }
     return s.orders.UpdateStatus(ctx, orderID, status)
 }
-
