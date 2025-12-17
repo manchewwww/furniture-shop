@@ -19,8 +19,8 @@ const DATABASE_PREFIX = "DATABASE"
 
 var DB *gorm.DB
 
-func Connect() error {
-	user := os.Getenv("USER")
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
 	password := os.Getenv("PASSWORD")
 	if user == "" || password == "" {
 		return fmt.Errorf("%s: missing database credentials", DATABASE_PREFIX)
