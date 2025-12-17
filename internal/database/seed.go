@@ -6,30 +6,31 @@ import (
     "math/rand"
     "time"
 
-    models "furniture-shop/internal/domain/entity"
+    ec "furniture-shop/internal/entities/catalog"
+    models "furniture-shop/internal/entities/user"
 )
 
 func seedData() error {
     var count int64
-    if err := DB.Model(&models.Department{}).Count(&count).Error; err != nil { return err }
+    if err := DB.Model(&ec.Department{}).Count(&count).Error; err != nil { return err }
     if count > 0 { return nil }
 
     log.Println("Seeding sample data...")
     // Departments
-    depts := []models.Department{
+    depts := []ec.Department{
         {Name: "Дневна", Description: "Мебели за дневна стая"},
         {Name: "Спалня", Description: "Мебели за спалня"},
         {Name: "Кухня", Description: "Мебели за кухня"},
     }
     for i := range depts { if err := DB.Create(&depts[i]).Error; err != nil { return err } }
 
-    var dLiving, dBedroom, dKitchen models.Department
+    var dLiving, dBedroom, dKitchen ec.Department
     DB.Where("name = ?", "Дневна").First(&dLiving)
     DB.Where("name = ?", "Спалня").First(&dBedroom)
     DB.Where("name = ?", "Кухня").First(&dKitchen)
 
     // Categories per department
-    cats := []models.Category{
+    cats := []ec.Category{
         {Name: "Шкафове", Description: "Шкафове и витрини", DepartmentID: dLiving.ID},
         {Name: "Етажерки", Description: "Етажерки и рафтове", DepartmentID: dLiving.ID},
         {Name: "Легла", Description: "Легла и нощни шкафчета", DepartmentID: dBedroom.ID},
@@ -41,14 +42,14 @@ func seedData() error {
 
     // Products: add 8-10 per some categories
     rand.Seed(time.Now().UnixNano())
-    var catWardrobes, catShelves, catBeds models.Category
+    var catWardrobes, catShelves, catBeds ec.Category
     DB.Where("name = ?", "Гардероби").First(&catWardrobes)
     DB.Where("name = ?", "Етажерки").First(&catShelves)
     DB.Where("name = ?", "Легла").First(&catBeds)
 
-    var products []models.Product
+    var products []ec.Product
     for i := 1; i <= 10; i++ {
-        products = append(products, models.Product{
+        products = append(products, ec.Product{
             CategoryID: catWardrobes.ID,
             Name:        "Гардероб Модел " + itoa(i),
             ShortDescription: "Гардероб с плъзгащи врати",
@@ -62,7 +63,7 @@ func seedData() error {
         })
     }
     for i := 1; i <= 8; i++ {
-        products = append(products, models.Product{
+        products = append(products, ec.Product{
             CategoryID: catShelves.ID,
             Name:        "Етажерка Модел " + itoa(i),
             ShortDescription: "Стенна етажерка",
@@ -76,7 +77,7 @@ func seedData() error {
         })
     }
     for i := 1; i <= 9; i++ {
-        products = append(products, models.Product{
+        products = append(products, ec.Product{
             CategoryID: catBeds.ID,
             Name:        "Легло Комфорт " + itoa(i),
             ShortDescription: "Двойно легло",
@@ -92,11 +93,11 @@ func seedData() error {
     for i := range products { if err := DB.Create(&products[i]).Error; err != nil { return err } }
 
     // Add a few options to first product of each category
-    var a, b, c models.Product
+    var a, b, c ec.Product
     DB.Where("category_id = ?", catWardrobes.ID).First(&a)
     DB.Where("category_id = ?", catShelves.ID).First(&b)
     DB.Where("category_id = ?", catBeds.ID).First(&c)
-    opts := []models.ProductOption{
+    opts := []ec.ProductOption{
         {ProductID: a.ID, OptionType: "material", OptionName: "Масив", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
         {ProductID: a.ID, OptionType: "extra", OptionName: "LED осветление", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
         {ProductID: c.ID, OptionType: "extra", OptionName: "Чекмеджета", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},

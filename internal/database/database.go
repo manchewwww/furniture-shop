@@ -1,14 +1,17 @@
 package database
 
 import (
-	"fmt"
-	"os"
+    "fmt"
+    "os"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
 
-	"furniture-shop/internal/config"
-	models "furniture-shop/internal/domain/entity"
+    "furniture-shop/internal/config"
+    ec "furniture-shop/internal/entities/catalog"
+    ei "furniture-shop/internal/entities/inventory"
+    eo "furniture-shop/internal/entities/orders"
+    eu "furniture-shop/internal/entities/user"
 )
 
 const DATABASE_PREFIX = "DATABASE"
@@ -38,18 +41,18 @@ func Connect() error {
 }
 
 func AutoMigrateAndSeed() error {
-	if err := DB.AutoMigrate(
-		&models.Department{},
-		&models.Category{},
-		&models.Product{},
-		&models.ProductOption{},
-		&models.User{},
-		&models.Order{},
-		&models.OrderItem{},
-		&models.Stock{},
-		&models.RecommendationCounter{},
-	); err != nil {
-		return err
-	}
-	return seedData()
+    if err := DB.AutoMigrate(
+        &ec.Department{},
+        &ec.Category{},
+        &ec.Product{},
+        &ec.ProductOption{},
+        &eu.User{},
+        &eo.Order{},
+        &eo.OrderItem{},
+        &ei.Stock{},
+        &ec.RecommendationCounter{},
+    ); err != nil {
+        return err
+    }
+    return seedData()
 }
