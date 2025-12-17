@@ -5,16 +5,36 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 var Configurations Config
 
 func LoadConfig() error {
-	primaryPath := "/app/appconfig.json"
+	candidates := []string{}
+	if p := strings.TrimSpace(os.Getenv("APP_CONFIG")); p != "" {
+		candidates = append(candidates, p)
+	}
+	candidates = append(candidates,
+		"appconfig.json",
+		filepath.Join("internal", "config", "appconfig.json"),
+		"/app/appconfig.json",
+	)
 
-	file, err := os.Open(primaryPath)
-	if err != nil {
-		return fmt.Errorf("failed to read config file: %w", err)
+	var file *os.File
+	var tried []string
+	for _, path := range candidates {
+		f, err := os.Open(path)
+		if err != nil {
+			tried = append(tried, path)
+			continue
+		}
+		file = f
+		break
+	}
+	if file == nil {
+		return fmt.Errorf("failed to open config file; tried: %s", strings.Join(tried, ", "))
 	}
 	defer file.Close()
 
