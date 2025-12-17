@@ -25,8 +25,10 @@ func (r *ProductOptionRepository) Create(ctx context.Context, o *ec.ProductOptio
 }
 
 func (r *ProductOptionRepository) Update(ctx context.Context, id uint, o ec.ProductOption) error {
-    o.ID = 0
-    return r.db.WithContext(ctx).Model(&ec.ProductOption{}).Where("id = ?", id).Updates(o).Error
+    // Use Select to explicitly specify which fields to update, avoiding zero-value issues
+    return r.db.WithContext(ctx).Model(&ec.ProductOption{}).Where("id = ?", id).
+        Select("product_id", "option_type", "option_name", "price_modifier_type", "price_modifier_value", "production_time_modifier_days", "production_time_modifier_percent").
+        Updates(o).Error
 }
 
 func (r *ProductOptionRepository) Delete(ctx context.Context, id uint) error {

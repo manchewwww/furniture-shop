@@ -56,16 +56,16 @@ func (s *ordersService) CreateOrder(ctx context.Context, in service.CreateOrderI
         p, err := s.product.FindByID(ctx, it.ProductID)
         if err != nil { return nil, fmt.Errorf("product %d not found", it.ProductID) }
         if it.Quantity <= 0 { it.Quantity = 1 }
-        unit := CalculateUnitPrice(*p, toSelected(it.Options))
+        unit := CalculateUnitPrice(*p, it.Options)
         line := unit * float64(it.Quantity)
-        pt := CalculateItemProductionTime(*p, toSelected(it.Options))
+        pt := CalculateItemProductionTime(*p, it.Options)
         items = append(items, eo.OrderItem{
             ProductID: p.ID,
             Quantity:  it.Quantity,
             UnitPrice: unit,
             LineTotal: line,
             CalculatedProductionTimeDays: pt,
-            SelectedOptionsJSON: MarshalSelectedOptions(toSelected(it.Options)),
+            SelectedOptionsJSON: MarshalSelectedOptions(it.Options),
         })
         total += line
     }
@@ -152,4 +152,4 @@ func CalculateOrderProductionTimeWithWorkload(items []eo.OrderItem, workloadCoun
     return max
 }
 
-func toSelected(in []service.SelectedOption) []service.SelectedOption { return in }
+

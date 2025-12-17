@@ -15,21 +15,21 @@ import (
 	eu "furniture-shop/internal/entities/user"
 )
 
-const DATABASE_PREFIX = "DATABASE"
+const databaseErrorPrefix = "DATABASE"
 
 var DB *gorm.DB
 
+func Connect() error {
 	user := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
-	password := os.Getenv("PASSWORD")
 	if user == "" || password == "" {
-		return fmt.Errorf("%s: missing database credentials", DATABASE_PREFIX)
+		return fmt.Errorf("%s: missing database credentials (DB_USER and DB_PASSWORD environment variables)", databaseErrorPrefix)
 	}
 
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
-		config.Configurations.DB.HOST, user, password, config.Configurations.DB.NAME,
-		config.Configurations.DB.PORT, config.Configurations.DB.SSL)
+		config.Configurations.DB.Host, user, password, config.Configurations.DB.Name,
+		config.Configurations.DB.Port, config.Configurations.DB.SSL)
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {

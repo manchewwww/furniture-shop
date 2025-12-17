@@ -60,7 +60,9 @@ func (h *Handler) UserOrderDetails() fiber.Handler {
         uid, ok := c.Locals("user_id").(uint)
         if !ok { return c.Status(401).JSON(fiber.Map{"message":"unauthorized"}) }
         var id uint
-        _, _ = fmt.Sscan(c.Params("id"), &id)
+        if _, err := fmt.Sscan(c.Params("id"), &id); err != nil {
+            return c.Status(400).JSON(fiber.Map{"message":"invalid id"})
+        }
         order, err := h.svc.GetUserOrder(c.Context(), uid, id)
         if err != nil { return c.Status(404).JSON(fiber.Map{"message":"not found"}) }
         return c.JSON(order)
@@ -83,7 +85,9 @@ func (h *Handler) AdminUpdateOrderStatus() fiber.Handler {
         var in patchStatusDTO
         if err := c.BodyParser(&in); err != nil { return c.Status(400).JSON(fiber.Map{"message":"invalid request"}) }
         var id uint
-        _, _ = fmt.Sscan(c.Params("id"), &id)
+        if _, err := fmt.Sscan(c.Params("id"), &id); err != nil {
+            return c.Status(400).JSON(fiber.Map{"message":"invalid id"})
+        }
         if err := h.svc.AdminUpdateOrderStatus(c.Context(), id, in.Status); err != nil { return c.Status(400).JSON(fiber.Map{"message": err.Error()}) }
         return c.JSON(fiber.Map{"message":"updated"})
     }

@@ -3,7 +3,6 @@ package main
 import (
     "log"
     "os"
-    "github.com/joho/godotenv"
 
     "furniture-shop/internal/config"
     "furniture-shop/internal/database"
@@ -13,9 +12,9 @@ import (
 )
 
 func main() {
-    _ = godotenv.Load()
-    if err := config.LoadConfig(); err != nil { log.Fatalf("Config load failed: %v", err) }
+    // Load .env file first (if it exists) before loading config
     if err := config.LoadEnvFile(); err != nil { log.Fatalf("Env load failed: %v", err) }
+    if err := config.LoadConfig(); err != nil { log.Fatalf("Config load failed: %v", err) }
     if err := database.Connect(); err != nil { log.Fatalf("DB connection failed: %v", err) }
     if err := database.AutoMigrateAndSeed(); err != nil { log.Fatalf("Migration/Seed failed: %v", err) }
 

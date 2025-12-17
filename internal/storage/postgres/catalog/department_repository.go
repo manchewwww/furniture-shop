@@ -23,8 +23,10 @@ func (r *DepartmentRepository) Create(ctx context.Context, d *ec.Department) err
 }
 
 func (r *DepartmentRepository) Update(ctx context.Context, id uint, d ec.Department) error {
-    d.ID = 0
-    return r.db.WithContext(ctx).Model(&ec.Department{}).Where("id = ?", id).Updates(d).Error
+    // Use Select to explicitly specify which fields to update, avoiding zero-value issues
+    return r.db.WithContext(ctx).Model(&ec.Department{}).Where("id = ?", id).
+        Select("name").
+        Updates(d).Error
 }
 
 func (r *DepartmentRepository) Delete(ctx context.Context, id uint) error {
