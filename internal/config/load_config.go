@@ -14,7 +14,7 @@ func LoadConfig() error {
 
 	file, err := os.Open(primaryPath)
 	if err != nil {
-		return fmt.Errorf("failed to read both primary and fallback config files: %w", err)
+		return fmt.Errorf("failed to read config file: %w", err)
 	}
 	defer file.Close()
 
