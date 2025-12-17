@@ -161,9 +161,10 @@ func (h *Handler) ListProductOptions() fiber.Handler {
         var pid *uint
         if s := c.Query("product_id"); s != "" {
             var v uint
-            if _, err := fmt.Sscan(s, &v); err == nil {
-                pid = &v
+            if _, err := fmt.Sscan(s, &v); err != nil {
+                return c.Status(400).JSON(fiber.Map{"message": "invalid product_id"})
             }
+            pid = &v
         }
         items, err := h.svc.ListProductOptions(c.Context(), pid)
         if err != nil {
