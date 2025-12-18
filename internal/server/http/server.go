@@ -20,7 +20,7 @@ type Server struct {
 func NewServer(svc *service.Service) *Server {
     app := fiber.New()
     app.Use(cors.New(cors.Config{
-        AllowOrigins:     strings.Join(config.Configurations.CORS_ORIGINS, ","),
+        AllowOrigins:     strings.Join(config.Configurations.CORSOrigins, ","),
         AllowCredentials: true,
         AllowMethods:     "GET,POST,PATCH,DELETE,PUT",
         AllowHeaders:     "Authorization,Content-Type",

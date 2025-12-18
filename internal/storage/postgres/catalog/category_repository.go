@@ -31,8 +31,10 @@ func (r *CategoryRepository) Create(ctx context.Context, c *ec.Category) error {
 }
 
 func (r *CategoryRepository) Update(ctx context.Context, id uint, c ec.Category) error {
-    c.ID = 0
-    return r.db.WithContext(ctx).Model(&ec.Category{}).Where("id = ?", id).Updates(c).Error
+    // Use Select to explicitly specify which fields to update, avoiding zero-value issues
+    return r.db.WithContext(ctx).Model(&ec.Category{}).Where("id = ?", id).
+        Select("name", "department_id").
+        Updates(c).Error
 }
 
 func (r *CategoryRepository) Delete(ctx context.Context, id uint) error {
