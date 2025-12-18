@@ -1,50 +1,65 @@
 package database
 
 import (
-    "fmt"
-    "time"
+	"fmt"
+	"os"
+	"time"
 
-    "gorm.io/driver/postgres"
-    "gorm.io/gorm"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 
-    "furniture-shop/internal/config"
-    "furniture-shop/internal/models"
+	"furniture-shop/internal/config"
+	ec "furniture-shop/internal/entities/catalog"
+	ei "furniture-shop/internal/entities/inventory"
+	eo "furniture-shop/internal/entities/orders"
+	eu "furniture-shop/internal/entities/user"
 )
+
+const databaseErrorPrefix = "DATABASE"
 
 var DB *gorm.DB
 
-func Connect(cfg *config.Config) error {
-    dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Europe/Sofia",
-        cfg.DBHost, cfg.DBUser, cfg.DBPass, cfg.DBName, cfg.DBPort)
-    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-    if err != nil {
-        return err
-    }
-    sqlDB, err := db.DB()
-    if err != nil {
-        return err
-    }
-    sqlDB.SetMaxIdleConns(5)
-    sqlDB.SetMaxOpenConns(10)
-    sqlDB.SetConnMaxLifetime(time.Hour)
-    DB = db
-    return nil
+func Connect() error {
+	user := os.Getenv("DB_USER")
+	password := os.Getenv("DB_PASSWORD")
+	if user == "" || password == "" {
+		return fmt.Errorf("%s: missing database credentials (DB_USER and DB_PASSWORD environment variables)", databaseErrorPrefix)
+	}
+
+	dsn := fmt.Sprintf(
+		"host=%s user=%s password=%s dbname=%s port=%d sslmode=%s TimeZone=UTC",
+		config.Configurations.DB.Host, user, password, config.Configurations.DB.Name,
+		config.Configurations.DB.Port, config.Configurations.DB.SSL)
+
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		return err
+	}
+
+	DB = db
+
+	if sqlDB, err := DB.DB(); err == nil {
+		sqlDB.SetMaxIdleConns(20)
+		sqlDB.SetMaxOpenConns(100)
+		sqlDB.SetConnMaxLifetime(60 * time.Minute)
+	}
+
+	return nil
 }
 
 func AutoMigrateAndSeed() error {
-    if err := DB.AutoMigrate(
-        &models.Department{},
-        &models.Category{},
-        &models.Product{},
-        &models.ProductOption{},
-        &models.User{},
-        &models.Order{},
-        &models.OrderItem{},
-        &models.Stock{},
-        &models.RecommendationCounter{},
-    ); err != nil {
-        return err
-    }
-    return seedData()
+	if err := DB.AutoMigrate(
+		&ec.Department{},
+		&ec.Category{},
+		&ec.Product{},
+		&ec.ProductOption{},
+		&eu.User{},
+		&eo.Order{},
+		&eo.OrderItem{},
+		&ei.Stock{},
+		&ec.RecommendationCounter{},
+	); err != nil {
+		return err
+	}
+	return seedData()
 }
-

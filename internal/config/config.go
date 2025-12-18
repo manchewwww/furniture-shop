@@ -1,34 +1,13 @@
 package config
 
-import "os"
-
 type Config struct {
-    DBUser      string
-    DBPass      string
-    DBHost      string
-    DBPort      string
-    DBName      string
-    CORSOrigins string
-    JWTSecret   string
+	DB          DBConfig `json:"DB"`
+	CORSOrigins []string `json:"CORS_ORIGINS"`
 }
 
-func getenv(k, def string) string {
-    v := os.Getenv(k)
-    if v == "" {
-        return def
-    }
-    return v
+type DBConfig struct {
+	Name string `json:"NAME"`
+	Host string `json:"HOST"`
+	Port uint   `json:"PORT"`
+	SSL  string `json:"SSL"`
 }
-
-func Load() *Config {
-    return &Config{
-        DBUser:      getenv("DB_USER", "postgres"),
-        DBPass:      getenv("DB_PASS", "postgres"),
-        DBHost:      getenv("DB_HOST", "127.0.0.1"),
-        DBPort:      getenv("DB_PORT", "5432"),
-        DBName:      getenv("DB_NAME", "furniture_shop"),
-        CORSOrigins: getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000"),
-        JWTSecret:   getenv("JWT_SECRET", "dev-secret-change-me"),
-    }
-}
-

@@ -1,0 +1,9 @@
+{
+  "DB": {
+    "NAME": "furniture-shop",
+    "HOST": "localhost",
+    "PORT": 5432,
+    "SSL": "disable"
+  },
+  "CORS_ORIGINS": ["http://localhost:5173", "http://localhost:3000"]
+}

@@ -4,41 +4,24 @@ import (
     "log"
     "os"
 
-    "github.com/gofiber/fiber/v2"
-    "github.com/gofiber/fiber/v2/middleware/cors"
-    "github.com/joho/godotenv"
-
     "furniture-shop/internal/config"
     "furniture-shop/internal/database"
-    "furniture-shop/internal/routes"
+    httpserver "furniture-shop/internal/server/http"
+    domain "furniture-shop/internal/service/domain"
+    pg "furniture-shop/internal/storage/postgres"
 )
 
 func main() {
-    _ = godotenv.Load()
+    // Load .env file first (if it exists) before loading config
+    if err := config.LoadEnvFile(); err != nil { log.Fatalf("Env load failed: %v", err) }
+    if err := config.LoadConfig(); err != nil { log.Fatalf("Config load failed: %v", err) }
+    if err := database.Connect(); err != nil { log.Fatalf("DB connection failed: %v", err) }
+    if err := database.AutoMigrateAndSeed(); err != nil { log.Fatalf("Migration/Seed failed: %v", err) }
 
-    cfg := config.Load()
-    if err := database.Connect(cfg); err != nil {
-        log.Fatalf("DB connection failed: %v", err)
-    }
-    if err := database.AutoMigrateAndSeed(); err != nil {
-        log.Fatalf("Migration/Seed failed: %v", err)
-    }
-
-    app := fiber.New()
-    app.Use(cors.New(cors.Config{
-        AllowOrigins:     cfg.CORSOrigins,
-        AllowCredentials: true,
-        AllowMethods:     "GET,POST,PATCH,DELETE,PUT",
-        AllowHeaders:     "Authorization,Content-Type",
-    }))
-
-    routes.Register(app, cfg)
-
-    port := os.Getenv("PORT")
-    if port == "" {
-        port = "8080"
-    }
-    log.Printf("Server listening on :%s", port)
-    log.Fatal(app.Listen(":" + port))
+    repos := pg.NewRepository(database.DB)
+    jwtSecret := os.Getenv("JWT_SECRET")
+    svc := domain.NewService(repos, jwtSecret)
+    srv := httpserver.NewServer(svc)
+    log.Fatal(srv.Run())
 }
 
