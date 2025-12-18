@@ -1,6 +1,6 @@
 import { Button, Card, Form, Input, Typography, message } from 'antd'
 import { login } from '../api/auth'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 export default function Login() {
   const nav = useNavigate()
@@ -20,6 +20,9 @@ export default function Login() {
         <Form.Item name="password" label="Парола" rules={[{ required: true }]}><Input.Password /></Form.Item>
         <Button type="primary" htmlType="submit">Вход</Button>
       </Form>
+      <Typography.Paragraph style={{ marginTop: 12 }}>
+        Don’t have an account? <Link to="/register">Register</Link>
+      </Typography.Paragraph>
     </Card>
   )
 }
