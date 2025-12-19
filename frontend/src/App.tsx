@@ -11,11 +11,17 @@ import Orders from "./pages/Orders";
 import AdminDashboard from "./pages/AdminDashboard";
 import { CartProvider } from "./store/CartContext";
 import { useAuth } from "./store/AuthContext";
+import {
+  RequireAuth,
+  RequireRole,
+  ForbidAuth,
+  ForbidRole,
+} from "./components/RouteGuards";
 
 const { Header, Content, Footer } = Layout;
 
 export default function App() {
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, user, logout } = useAuth();
   const nav = useNavigate();
   return (
     <CartProvider>
@@ -33,12 +39,16 @@ export default function App() {
             </Menu.Item>
             {isAuthenticated ? (
               <>
-                <Menu.Item key="orders">
-                  <Link to="/orders">My Orders</Link>
-                </Menu.Item>
-                <Menu.Item key="admin">
-                  <Link to="/admin">Admin</Link>
-                </Menu.Item>
+                {user?.role !== "admin" && (
+                  <Menu.Item key="orders">
+                    <Link to="/orders">My Orders</Link>
+                  </Menu.Item>
+                )}
+                {user?.role === "admin" && (
+                  <Menu.Item key="admin">
+                    <Link to="/admin">Admin</Link>
+                  </Menu.Item>
+                )}
                 <Menu.Item
                   key="logout"
                   style={{ marginLeft: "auto" }}
@@ -69,10 +79,38 @@ export default function App() {
             <Route path="/product/:id" element={<ProductDetails />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/orders" element={<Orders />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route
+              path="/login"
+              element={
+                <ForbidAuth>
+                  <Login />
+                </ForbidAuth>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <ForbidAuth>
+                  <Register />
+                </ForbidAuth>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <RequireAuth>
+                  <ForbidRole role="admin">
+                    <Orders />
+                  </ForbidRole>
+                </RequireAuth>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RequireRole role="admin">{<AdminDashboard />}</RequireRole>
+              }
+            />
           </Routes>
         </Content>
         <Footer style={{ textAlign: "center" }}>
