@@ -26,6 +26,7 @@ func RegisterAdminRoutes(admin fiber.Router, h *Handler, orders *ho.Handler) {
     admin.Post("/product_options", h.CreateProductOption())
     admin.Put("/product_options/:id", h.UpdateProductOption())
     admin.Delete("/product_options/:id", h.DeleteProductOption())
+    admin.Post("/upload", h.UploadImage())
 
     admin.Get("/orders", orders.AdminListOrders())
     admin.Patch("/orders/:id/status", orders.AdminUpdateOrderStatus())
