@@ -7,7 +7,7 @@ import (
 
     "github.com/golang-jwt/jwt/v4"
 
-    eu "furniture-shop/internal/entities/user"
+     "furniture-shop/internal/entities/user"
     "furniture-shop/internal/service"
     "furniture-shop/internal/storage"
 )
@@ -21,7 +21,7 @@ func NewAuthService(users storage.UserRepository, jwtSecret string) service.Auth
     return &authService{users: users, jwtSecret: jwtSecret}
 }
 
-func (s *authService) GenerateJWT(u *eu.User) (string, error) {
+func (s *authService) GenerateJWT(u *user.User) (string, error) {
     claims := jwt.MapClaims{
         "sub":   u.ID,
         "email": u.Email,
@@ -32,12 +32,12 @@ func (s *authService) GenerateJWT(u *eu.User) (string, error) {
     return token.SignedString([]byte(s.jwtSecret))
 }
 
-func (s *authService) Authenticate(ctx context.Context, email, password string) (*eu.User, error) {
+func (s *authService) Authenticate(ctx context.Context, email, password string) (*user.User, error) {
     user, err := s.users.FindByEmail(ctx, email)
     if err != nil { return nil, errors.New("invalid email or password") }
     if !user.CheckPassword(password) { return nil, errors.New("invalid email or password") }
     return user, nil
 }
 
-func (s *authService) CreateUser(ctx context.Context, u *eu.User) error { return s.users.Create(ctx, u) }
+func (s *authService) CreateUser(ctx context.Context, u *user.User) error { return s.users.Create(ctx, u) }
 
