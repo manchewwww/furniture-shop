@@ -1,4 +1,4 @@
-import { Layout, Menu } from "antd";
+import { Layout, Menu, Select } from "antd";
 import { Link, Route, Routes, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Catalog from "./pages/Catalog";
@@ -11,6 +11,7 @@ import Orders from "./pages/Orders";
 import AdminDashboard from "./pages/AdminDashboard";
 import { CartProvider } from "./store/CartContext";
 import { useAuth } from "./store/AuthContext";
+import { useI18n } from "./store/I18nContext";
 import {
   RequireAuth,
   RequireRole,
@@ -22,6 +23,7 @@ const { Header, Content, Footer } = Layout;
 
 export default function App() {
   const { isAuthenticated, user, logout } = useAuth();
+  const { t, lang, setLang } = useI18n();
   const nav = useNavigate();
   return (
     <CartProvider>
@@ -29,24 +31,24 @@ export default function App() {
         <Header>
           <Menu theme="dark" mode="horizontal" selectable={false}>
             <Menu.Item key="home">
-              <Link to="/">Home</Link>
+              <Link to="/">{t("nav.home")}</Link>
             </Menu.Item>
             <Menu.Item key="catalog">
-              <Link to="/catalog">Catalog</Link>
+              <Link to="/catalog">{t("nav.catalog")}</Link>
             </Menu.Item>
             <Menu.Item key="cart">
-              <Link to="/cart">Cart</Link>
+              <Link to="/cart">{t("nav.cart")}</Link>
             </Menu.Item>
             {isAuthenticated ? (
               <>
                 {user?.role !== "admin" && (
                   <Menu.Item key="orders">
-                    <Link to="/orders">My Orders</Link>
+                    <Link to="/orders">{t("nav.orders")}</Link>
                   </Menu.Item>
                 )}
                 {user?.role === "admin" && (
                   <Menu.Item key="admin">
-                    <Link to="/admin">Admin</Link>
+                    <Link to="/admin">{t("nav.admin")}</Link>
                   </Menu.Item>
                 )}
                 <Menu.Item
@@ -57,19 +59,30 @@ export default function App() {
                     nav("/");
                   }}
                 >
-                  Logout
+                  {t("nav.logout")}
                 </Menu.Item>
               </>
             ) : (
               <>
                 <Menu.Item key="login" style={{ marginLeft: "auto" }}>
-                  <Link to="/login">Login</Link>
+                  <Link to="/login">{t("nav.login")}</Link>
                 </Menu.Item>
                 <Menu.Item key="register">
-                  <Link to="/register">Register</Link>
+                  <Link to="/register">{t("nav.register")}</Link>
                 </Menu.Item>
               </>
             )}
+            <Menu.Item key="lang" style={{ marginLeft: 12 }}>
+              <Select
+                value={lang}
+                style={{ width: 140 }}
+                onChange={(v) => setLang(v as any)}
+                options={[
+                  { value: "en", label: "English" },
+                  { value: "bg", label: "Български" },
+                ]}
+              />
+            </Menu.Item>
           </Menu>
         </Header>
         <Content style={{ padding: 24 }}>

@@ -16,17 +16,24 @@ import {
 import { UploadOutlined } from "@ant-design/icons";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
+import { useI18n } from "../store/I18nContext";
 
 export default function AdminDashboard() {
   const [depts, setDepts] = useState<any[]>([]);
   const [orders, setOrders] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [open, setOpen] = useState(false);
-  const [form] = Form.useForm();
+  const [openDept, setOpenDept] = useState(false);
+  const [deptForm] = Form.useForm();
   const [openProduct, setOpenProduct] = useState(false);
   const [productForm] = Form.useForm();
   const [editing, setEditing] = useState<any | null>(null);
+  const { t } = useI18n();
+  const selectedDept: number | undefined = Form.useWatch(
+    "department_id",
+    productForm
+  );
+
   const load = async () => {
     try {
       const [d, o, p, c] = await Promise.all([
@@ -40,7 +47,7 @@ export default function AdminDashboard() {
       setProducts(p.data);
       setCategories(c.data);
     } catch {
-      message.error("Нужен е админ вход");
+      message.error("Failed to load admin data");
     }
   };
   useEffect(() => {
@@ -48,10 +55,10 @@ export default function AdminDashboard() {
   }, []);
 
   const createDept = async () => {
-    const v = await form.validateFields();
+    const v = await deptForm.validateFields();
     await api.post("/admin/departments", v);
-    setOpen(false);
-    form.resetFields();
+    setOpenDept(false);
+    deptForm.resetFields();
     load();
   };
 
@@ -68,6 +75,7 @@ export default function AdminDashboard() {
       short_description: v.description,
       long_description: v.description,
       base_price: v.price,
+      base_production_time_days: v.production_days ?? 0,
       image_url: v.image,
     };
     if (editing) {
@@ -92,35 +100,45 @@ export default function AdminDashboard() {
         items={[
           {
             key: "depts",
-            label: "Отдели",
+            label: t("admin.departments"),
             children: (
               <Card
-                title="Отдели"
-                extra={<Button onClick={() => setOpen(true)}>Нов отдел</Button>}
+                title={t("admin.departments")}
+                extra={
+                  <Button onClick={() => setOpenDept(true)}>
+                    {t("admin.create_department")}
+                  </Button>
+                }
               >
                 <Table
                   rowKey="id"
                   dataSource={depts}
                   columns={[
-                    { title: "Име", dataIndex: "name" },
-                    { title: "Описание", dataIndex: "description" },
+                    { title: t("admin.department_name"), dataIndex: "name" },
+                    {
+                      title: t("admin.department_description"),
+                      dataIndex: "description",
+                    },
                   ]}
                 />
                 <Modal
-                  title="Нов отдел"
-                  open={open}
+                  title={t("admin.create_department")}
+                  open={openDept}
                   onOk={createDept}
-                  onCancel={() => setOpen(false)}
+                  onCancel={() => setOpenDept(false)}
                 >
-                  <Form layout="vertical" form={form}>
+                  <Form layout="vertical" form={deptForm}>
                     <Form.Item
                       name="name"
-                      label="Име"
+                      label={t("admin.department_name")}
                       rules={[{ required: true }]}
                     >
                       <Input />
                     </Form.Item>
-                    <Form.Item name="description" label="Описание">
+                    <Form.Item
+                      name="description"
+                      label={t("admin.department_description")}
+                    >
                       <Input />
                     </Form.Item>
                   </Form>
@@ -130,32 +148,35 @@ export default function AdminDashboard() {
           },
           {
             key: "orders",
-            label: "Поръчки",
+            label: t("admin.orders"),
             children: (
-              <Card title="Всички поръчки">
+              <Card title={t("admin.orders_title")}>
                 <Table
                   rowKey="id"
                   dataSource={orders}
                   columns={[
-                    { title: "№", dataIndex: "id" },
+                    { title: t("orders.col.id"), dataIndex: "id" },
                     {
-                      title: "Статус",
+                      title: t("orders.col.status"),
                       dataIndex: "status",
-                      render: (s, r) => <Tag>{s}</Tag>,
+                      render: (s: string) => <Tag>{s}</Tag>,
                     },
-                    { title: "Плащане", dataIndex: "payment_status" },
-                    { title: "Общо", dataIndex: "total_price" },
                     {
-                      title: "Действия",
+                      title: t("orders.col.payment_status"),
+                      dataIndex: "payment_status",
+                    },
+                    { title: t("orders.col.total"), dataIndex: "total_price" },
+                    {
+                      title: t("admin.actions"),
                       render: (_: any, r: any) => (
                         <>
                           {[
-                            "нова",
-                            "потвърдена",
-                            "впроизводство",
-                            "изпратена",
-                            "доставена",
-                            "отказана",
+                            "нов",
+                            "в производство",
+                            "готов за доставка",
+                            "доставен",
+                            "отказан",
+                            "в обработка",
                           ].map((st) => (
                             <Button
                               key={st}
@@ -178,7 +199,7 @@ export default function AdminDashboard() {
       />
 
       <Card
-        title="????????"
+        title={t("admin.products")}
         style={{ marginTop: 16 }}
         extra={
           <Button
@@ -188,7 +209,7 @@ export default function AdminDashboard() {
               setOpenProduct(true);
             }}
           >
-            ????? ?????
+            {t("admin.create_product")}
           </Button>
         }
       >
@@ -196,12 +217,19 @@ export default function AdminDashboard() {
           rowKey="id"
           dataSource={products}
           columns={[
-            { title: "?", dataIndex: "id", width: 60 },
-            { title: "????", dataIndex: "name" },
-            { title: "????????", dataIndex: "short_description" },
-            { title: "????", dataIndex: "base_price" },
+            { title: "ID", dataIndex: "id", width: 60 },
+            { title: t("admin.product_name"), dataIndex: "name" },
             {
-              title: "????????",
+              title: t("admin.product_description"),
+              dataIndex: "short_description",
+            },
+            { title: t("admin.product_price"), dataIndex: "base_price" },
+            {
+              title: t("orders.col.eta_days"),
+              dataIndex: "base_production_time_days",
+            },
+            {
+              title: t("admin.product_image"),
               dataIndex: "image_url",
               render: (u: string) =>
                 u ? (
@@ -213,7 +241,7 @@ export default function AdminDashboard() {
                 ) : null,
             },
             {
-              title: "",
+              title: t("admin.actions"),
               render: (_: any, r: any) => (
                 <>
                   <Button
@@ -223,10 +251,14 @@ export default function AdminDashboard() {
                       setEditing(r);
                       setOpenProduct(true);
                       productForm.setFieldsValue({
+                        department_id: categories.find(
+                          (c: any) => c.id === r.category_id
+                        )?.department_id,
                         category_id: r.category_id,
                         name: r.name,
                         description: r.short_description || r.long_description,
                         price: r.base_price,
+                        production_days: r.base_production_time_days,
                         image: r.image_url,
                       });
                     }}
@@ -247,7 +279,7 @@ export default function AdminDashboard() {
           ]}
         />
         <Modal
-          title={editing ? "???????? ?????" : "????? ?????"}
+          title={editing ? t("admin.edit_product") : t("admin.create_product")}
           open={openProduct}
           onOk={submitProduct}
           onCancel={() => {
@@ -256,35 +288,69 @@ export default function AdminDashboard() {
           }}
         >
           <Form layout="vertical" form={productForm}>
-            <Form.Item
-              name="category_id"
-              label="?????????"
-              rules={[{ required: true }]}
-            >
-              <Select placeholder="????? ?????????">
-                {categories.map((c: any) => (
-                  <Select.Option key={c.id} value={c.id}>
-                    {c.name}
+            <Form.Item name="department_id" label={t("admin.department")}>
+              <Select
+                placeholder={t("admin.department")}
+                onChange={() =>
+                  productForm.setFieldsValue({ category_id: undefined })
+                }
+              >
+                {depts.map((d: any) => (
+                  <Select.Option key={d.id} value={d.id}>
+                    {d.name}
                   </Select.Option>
                 ))}
               </Select>
             </Form.Item>
-            <Form.Item name="name" label="????" rules={[{ required: true }]}>
+            <Form.Item
+              name="category_id"
+              label={t("admin.category")}
+              rules={[{ required: true }]}
+            >
+              <Select placeholder={t("admin.category")}>
+                {categories
+                  .filter(
+                    (c: any) =>
+                      !selectedDept || c.department_id === selectedDept
+                  )
+                  .map((c: any) => (
+                    <Select.Option key={c.id} value={c.id}>
+                      {c.name}
+                    </Select.Option>
+                  ))}
+              </Select>
+            </Form.Item>
+            <Form.Item
+              name="name"
+              label={t("admin.product_name")}
+              rules={[{ required: true }]}
+            >
               <Input />
             </Form.Item>
             <Form.Item
               name="description"
-              label="????????"
+              label={t("admin.product_description")}
               rules={[{ required: true }]}
             >
               <Input.TextArea rows={3} />
             </Form.Item>
-            <Form.Item name="price" label="????" rules={[{ required: true }]}>
+            <Form.Item
+              name="price"
+              label={t("admin.product_price")}
+              rules={[{ required: true }]}
+            >
               <InputNumber min={0} step={0.01} style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item
+              name="production_days"
+              label={t("admin.product_production_days")}
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={0} step={1} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
               name="image"
-              label="???? (URL)"
+              label={t("admin.product_image")}
               rules={[{ required: true }]}
             >
               <Input placeholder="https://... or upload below" />
@@ -300,15 +366,17 @@ export default function AdminDashboard() {
                     headers: { "Content-Type": "multipart/form-data" },
                   });
                   productForm.setFieldsValue({ image: res.data.url });
-                  message.success("Uploaded");
+                  message.success(t("admin.upload_success"));
                   opts.onSuccess?.(res.data);
                 } catch (e) {
-                  message.error("Upload failed");
+                  message.error(t("admin.upload_fail"));
                   opts.onError?.(e);
                 }
               }}
             >
-              <Button icon={<UploadOutlined />}>Upload Image</Button>
+              <Button icon={<UploadOutlined />}>
+                {t("admin.upload_image")}
+              </Button>
             </Upload>
           </Form>
         </Modal>
