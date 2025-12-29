@@ -59,6 +59,9 @@ export default function AdminCategories() {
         <Button type="link" onClick={() => nav("/admin/products")}>
           Products
         </Button>
+        <Button type="link" onClick={() => nav("/admin/orders")}>
+          Orders
+        </Button>
       </Card>
       <Card
         title="Categories"
