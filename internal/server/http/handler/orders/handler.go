@@ -65,6 +65,8 @@ func (h *Handler) CreateOrder() fiber.Handler {
 		switch in.PaymentMethod {
 		case "card":
 			fe := "http://localhost:5173"
+			// first: stripe login
+			// second: stripe listen --forward-to localhost:8080/api/webhooks/stripe
 			//Payment succeeds - 4242 4242 4242 4242
 			//Payment requires authentication - 4000 0025 0000 3155
 			//Payment is declined- 4000 0000 0000 9995
@@ -82,7 +84,8 @@ func (h *Handler) CreateOrder() fiber.Handler {
 					"%s/payment/cancel?order_id=%d",
 					fe, order.ID,
 				)),
-				Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+				ClientReferenceID: stripe.String(strconv.Itoa(int(order.ID))),
+				Metadata:          map[string]string{"order_id": strconv.Itoa(int(order.ID))},
 				PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
 					Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
 				},
@@ -180,10 +183,11 @@ func (h *Handler) PayExistingOrder() fiber.Handler {
 		stripe.Key = config.Env.StripeSecretKey
 		amount := int64(math.Round(order.TotalPrice * 100))
 		params := &stripe.CheckoutSessionParams{
-			Mode:       stripe.String(string(stripe.CheckoutSessionModePayment)),
-			SuccessURL: stripe.String(fmt.Sprintf("%s/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=%d", fe, order.ID)),
-			CancelURL:  stripe.String(fmt.Sprintf("%s/payment/cancel?order_id=%d", fe, order.ID)),
-			Metadata:   map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+			Mode:              stripe.String(string(stripe.CheckoutSessionModePayment)),
+			SuccessURL:        stripe.String(fmt.Sprintf("%s/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=%d", fe, order.ID)),
+			CancelURL:         stripe.String(fmt.Sprintf("%s/payment/cancel?order_id=%d", fe, order.ID)),
+			ClientReferenceID: stripe.String(strconv.Itoa(int(order.ID))),
+			Metadata:          map[string]string{"order_id": strconv.Itoa(int(order.ID))},
 			PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
 				Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
 			},

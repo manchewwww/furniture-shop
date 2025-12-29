@@ -45,41 +45,82 @@ func (h *Handler) StripeWebhook() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		payload := c.BodyRaw()
 		sig := c.Get("Stripe-Signature")
+
 		evt, err := webhook.ConstructEvent(payload, sig, config.Env.StripeWebhookSecret)
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid signature"})
 		}
 
-		var orderIDStr string
 		switch evt.Type {
-		case "checkout.session.completed", "checkout.session.async_payment_succeeded", "checkout.session.async_payment_failed", "checkout.session.expired":
+		case "checkout.session.completed", "checkout.session.async_payment_succeeded":
 			var sess stripe.CheckoutSession
-			if err := json.Unmarshal(evt.Data.Raw, &sess); err == nil {
+			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
+				return c.SendStatus(200)
+			}
+
+			orderIDStr := sess.ClientReferenceID
+			if orderIDStr == "" {
 				orderIDStr = sess.Metadata["order_id"]
 			}
-		case "payment_intent.succeeded", "payment_intent.payment_failed":
-			var pi stripe.PaymentIntent
-			if err := json.Unmarshal(evt.Data.Raw, &pi); err == nil {
-				orderIDStr = pi.Metadata["order_id"]
+
+			if orderIDStr != "" && sess.PaymentStatus == stripe.CheckoutSessionPaymentStatusPaid {
+				var oid uint
+				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
+					_ = h.svc.ProcessPaymentResult(c.Context(), oid, true)
+				}
 			}
-		default:
-			return c.SendStatus(200)
+
+		case "checkout.session.expired":
+			var sess stripe.CheckoutSession
+			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
+				return c.SendStatus(200)
+			}
+
+			orderIDStr := sess.ClientReferenceID
+			if orderIDStr == "" {
+				orderIDStr = sess.Metadata["order_id"]
+			}
+
+			if orderIDStr != "" {
+				var oid uint
+				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
+					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
+				}
+			}
+
+		case "checkout.session.async_payment_failed":
+			var sess stripe.CheckoutSession
+			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
+				return c.SendStatus(200)
+			}
+
+			orderIDStr := sess.ClientReferenceID
+			if orderIDStr == "" {
+				orderIDStr = sess.Metadata["order_id"]
+			}
+
+			if orderIDStr != "" {
+				var oid uint
+				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
+					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
+				}
+			}
+
+		case "payment_intent.payment_failed":
+			var pi stripe.PaymentIntent
+			if err := json.Unmarshal(evt.Data.Raw, &pi); err != nil {
+				return c.SendStatus(200)
+			}
+
+			orderIDStr := pi.Metadata["order_id"]
+			if orderIDStr != "" {
+				var oid uint
+				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
+					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
+				}
+			}
 		}
 
-		if orderIDStr == "" {
-			return c.SendStatus(200)
-		}
-		var oid uint
-		if _, err := fmt.Sscan(orderIDStr, &oid); err != nil {
-			return c.SendStatus(200)
-		}
-
-		switch evt.Type {
-		case "checkout.session.completed", "payment_intent.succeeded", "checkout.session.async_payment_succeeded":
-			_ = h.svc.ProcessPaymentResult(c.Context(), oid, true)
-		case "payment_intent.payment_failed", "checkout.session.async_payment_failed", "checkout.session.expired":
-			_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
-		}
 		return c.SendStatus(200)
 	}
 }
