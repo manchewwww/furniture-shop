@@ -9,7 +9,7 @@ import {
   message,
 } from "antd";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { fetchProduct, fetchRecommendations } from "../api/catalog";
 import { useCart } from "../store/CartContext";
 import { useI18n } from "../store/I18nContext";
@@ -33,7 +33,7 @@ export default function ProductDetails() {
   return (
     <div>
       <Row gutter={24}>
-        <Col md={14} xs={24}>
+        <Col md={10} xs={24}>
           {(() => {
             const origin = (() => {
               try {
@@ -47,9 +47,20 @@ export default function ProductDetails() {
                 ? origin + product.image_url
                 : product.image_url;
             return (
-              <img src={img} alt={product.name} style={{ maxWidth: "100%" }} />
+              <img
+                src={img}
+                alt={product.name}
+                style={{
+                  width: "100%",
+                  maxHeight: 360,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                }}
+              />
             );
           })()}
+        </Col>
+        <Col md={14} xs={24}>
           <Typography.Title level={3}>{product.name}</Typography.Title>
           <p>{product.long_description}</p>
           <p>
@@ -102,20 +113,54 @@ export default function ProductDetails() {
             </Button>
           </div>
         </Col>
-        <Col md={10} xs={24}>
-          <Typography.Title level={4}>
+      </Row>
+      {!!rec.length && (
+        <div style={{ marginTop: 24 }}>
+          <Typography.Title level={4} style={{ textAlign: "center" }}>
             {t("product.recommended")}
           </Typography.Title>
-          {rec.map((r) => (
-            <Card
-              key={r.id}
-              size="small"
-              style={{ marginBottom: 8 }}
-              title={r.name}
-            ></Card>
-          ))}
-        </Col>
-      </Row>
+          <Row gutter={[16, 16]} justify="start">
+            {rec.map((r) => {
+              const origin = (() => {
+                try {
+                  return new URL(api.defaults.baseURL as string).origin;
+                } catch {
+                  return "";
+                }
+              })();
+              const rimg =
+                r.image_url && !/^https?:/i.test(r.image_url)
+                  ? origin + r.image_url
+                  : r.image_url;
+              return (
+                <Col key={r.id} xs={12} sm={8} md={6} lg={6}>
+                  <Link to={`/product/${r.id}`} style={{ display: "block" }}>
+                    <Card
+                      hoverable
+                      bodyStyle={{ textAlign: "center" }}
+                      cover={
+                        rimg ? (
+                          <img
+                            src={rimg}
+                            alt={r.name}
+                            style={{
+                              width: "100%",
+                              height: 120,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : undefined
+                      }
+                    >
+                      <Typography.Text>{r.name}</Typography.Text>
+                    </Card>
+                  </Link>
+                </Col>
+              );
+            })}
+          </Row>
+        </div>
+      )}
     </div>
   );
 }

@@ -134,38 +134,44 @@ export default function Catalog() {
               : p.image_url;
           return (
             <Col key={p.id} xs={24} sm={12} md={8}>
-              <Card
-                hoverable
-                title={p.name}
-                cover={
-                  img ? (
-                    <img
-                      src={img}
-                      alt={p.name}
-                      style={{ width: "100%", height: 220, objectFit: "cover" }}
-                    />
-                  ) : undefined
-                }
-              >
-                {!!p.short_description && (
-                  <p style={{ color: "#666" }}>{p.short_description}</p>
-                )}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginBottom: 8,
-                  }}
+              <Link to={`/product/${p.id}`} style={{ display: "block" }}>
+                <Card
+                  hoverable
+                  title={p.name}
+                  cover={
+                    img ? (
+                      <img
+                        src={img}
+                        alt={p.name}
+                        style={{
+                          width: "100%",
+                          height: 220,
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : undefined
+                  }
                 >
-                  <span>
-                    {t("product.base_price")}: {Number(p.base_price).toFixed(2)}
-                  </span>
-                  <span>
-                    {t("product.base_prod_time")}: {p.base_production_time_days}
-                  </span>
-                </div>
-                <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
-              </Card>
+                  {!!p.short_description && (
+                    <p style={{ color: "#666" }}>{p.short_description}</p>
+                  )}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <span>
+                      {t("product.base_price")}:{" "}
+                      {Number(p.base_price).toFixed(2)}
+                    </span>
+                    <span>
+                      {t("product.base_prod_time")}:{" "}
+                      {p.base_production_time_days}
+                    </span>
+                  </div>
+                </Card>
+              </Link>
             </Col>
           );
         })}
