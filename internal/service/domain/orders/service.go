@@ -90,7 +90,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in service.CreateOrderI
 	order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
 	order.Items = items
 
-	if err := s.orders.CreateWithItems(ctx, order, items); err != nil {
+	if err := s.orders.CreateWithItems(ctx, order); err != nil {
 		return nil, err
 	}
 	return order, nil

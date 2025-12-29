@@ -17,18 +17,10 @@ func NewOrderRepository(db *gorm.DB) storage.OrderRepository {
 	return &OrderRepository{db: db}
 }
 
-func (r *OrderRepository) CreateWithItems(ctx context.Context, o *eo.Order, items []eo.OrderItem) error {
+func (r *OrderRepository) CreateWithItems(ctx context.Context, o *eo.Order) error {
 	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(o).Error; err != nil {
 			return err
-		}
-		for i := range items {
-			items[i].OrderID = o.ID
-		}
-		if len(items) > 0 {
-			if err := tx.Create(&items).Error; err != nil {
-				return err
-			}
 		}
 		return nil
 	})

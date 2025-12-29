@@ -51,7 +51,7 @@ type ProductOptionRepository interface {
 
 // Orders
 type OrderRepository interface {
-	CreateWithItems(ctx context.Context, o *eo.Order, items []eo.OrderItem) error
+	CreateWithItems(ctx context.Context, o *eo.Order) error
 	ListByUser(ctx context.Context, userID uint) ([]eo.Order, error)
 	FindByID(ctx context.Context, id uint) (*eo.Order, error)
 	FindWithItems(ctx context.Context, id uint) (*eo.Order, error)
