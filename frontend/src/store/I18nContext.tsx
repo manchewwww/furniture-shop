@@ -51,7 +51,6 @@ const dict: Record<Lang, Record<string, string>> = {
     "checkout.pay.error": "Payment declined",
     "checkout.payment.card": "Card",
     "checkout.payment.bank": "Bank Transfer",
-    "checkout.noncard.instructions": "We will contact you with payment instructions.",
     "checkout.empty_cart": "Your cart is empty.",
 
     "login.title": "Login",
@@ -171,6 +170,11 @@ const dict: Record<Lang, Record<string, string>> = {
     "checkout.pay": "Плати",
     "checkout.pay.success": "Плащането е успешно",
     "checkout.pay.error": "Плащането е отказано",
+    "checkout.card.order_created": "Поръчката е направена. Моля въведете вашите детайли за плащане.",
+    "checkout.payment.card": "Карта",
+    "checkout.payment.bank": "Банков превод",
+    "checkout.empty_cart": "Картата е празна.",
+    "login.required_for_checkout": "Влезте в профила за да продължите към плащане.",
     "login.title": "Вход",
     "login.email": "Имейл",
     "login.password": "Парола",
@@ -245,4 +249,5 @@ export const useI18n = () => {
   if (!ctx) throw new Error("I18nProvider is missing");
   return ctx;
 };
+
 
