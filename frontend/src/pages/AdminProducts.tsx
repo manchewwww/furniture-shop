@@ -5,32 +5,32 @@ import {
   Input,
   InputNumber,
   Modal,
+  Popconfirm,
   Select,
   Table,
-  Tabs,
-  Tag,
   Upload,
   message,
-  Popconfirm,
 } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import { useEffect, useMemo, useState } from "react";
 import { api } from "../api/client";
 import { useI18n } from "../store/I18nContext";
+import { useNavigate } from "react-router-dom";
 
-export default function AdminDashboard() {
+export default function AdminProducts() {
+  const { t } = useI18n();
+  const nav = useNavigate();
   const [depts, setDepts] = useState<any[]>([]);
-  const [orders, setOrders] = useState<any[]>([]);
-  const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
-  const [openDept, setOpenDept] = useState(false);
-  const [deptForm] = Form.useForm();
-  const [openCategory, setOpenCategory] = useState(false);
-  const [categoryForm] = Form.useForm();
+  const [products, setProducts] = useState<any[]>([]);
   const [openProduct, setOpenProduct] = useState(false);
   const [productForm] = Form.useForm();
   const [editing, setEditing] = useState<any | null>(null);
   const [colorOptions, setColorOptions] = useState<string[]>([]);
+  const selectedDept: number | undefined = Form.useWatch(
+    "department_id",
+    productForm
+  );
   const commonColours = useMemo(
     () => [
       "White",
@@ -59,52 +59,25 @@ export default function AdminDashboard() {
     ],
     []
   );
-  const { t } = useI18n();
-  const selectedDept: number | undefined = Form.useWatch(
-    "department_id",
-    productForm
-  );
 
   const load = async () => {
     try {
-      const [d, o, p, c] = await Promise.all([
+      const [d, c, p] = await Promise.all([
         api.get("/admin/departments"),
-        api.get("/admin/orders"),
-        api.get("/admin/products"),
         api.get("/admin/categories"),
+        api.get("/admin/products"),
       ]);
       setDepts(d.data);
-      setOrders(o.data);
-      setProducts(p.data);
       setCategories(c.data);
+      setProducts(p.data);
     } catch {
-      message.error("Failed to load admin data");
+      message.error("Failed to load products");
     }
   };
+
   useEffect(() => {
     load();
   }, []);
-
-  const createDept = async () => {
-    const v = await deptForm.validateFields();
-    await api.post("/admin/departments", v);
-    setOpenDept(false);
-    deptForm.resetFields();
-    load();
-  };
-
-  const createCategory = async () => {
-    const v = await categoryForm.validateFields();
-    await api.post("/admin/categories", v);
-    setOpenCategory(false);
-    categoryForm.resetFields();
-    load();
-  };
-
-  const setStatus = async (id: number, status: string) => {
-    await api.patch(`/admin/orders/${id}/status`, { status });
-    load();
-  };
 
   const submitProduct = async () => {
     const v = await productForm.validateFields();
@@ -174,227 +147,19 @@ export default function AdminDashboard() {
 
   return (
     <div>
-      <Tabs
-        items={[
-          {
-            key: "depts",
-            label: t("departments"),
-            children: (
-              <Card
-                title={t("departments")}
-                extra={
-                  <Button onClick={() => setOpenDept(true)}>
-                    {t("create_department")}
-                  </Button>
-                }
-              >
-                <Table
-                  rowKey="id"
-                  dataSource={depts}
-                  columns={[
-                    { title: t("department_name"), dataIndex: "name" },
-                    {
-                      title: t("department_description"),
-                      dataIndex: "description",
-                    },
-                  ]}
-                />
-                <Modal
-                  title={t("create_department")}
-                  open={openDept}
-                  onOk={createDept}
-                  onCancel={() => setOpenDept(false)}
-                >
-                  <Form layout="vertical" form={deptForm}>
-                    <Form.Item
-                      name="name"
-                      label={t("department_name")}
-                      rules={[{ required: true }]}
-                    >
-                      <Input />
-                    </Form.Item>
-                    <Form.Item
-                      name="description"
-                      label={t("department_description")}
-                    >
-                      <Input />
-                    </Form.Item>
-                    <Form.Item name="image_url" label={t("department_image")}>
-                      <Input placeholder="data:image/...;base64,... or upload below" />
-                    </Form.Item>
-                    <Upload
-                      accept="image/*"
-                      showUploadList={false}
-                      customRequest={async (opts: any) => {
-                        const formData = new FormData();
-                        formData.append("file", opts.file);
-                        try {
-                          const res = await api.post(
-                            "/admin/upload",
-                            formData,
-                            {
-                              headers: {
-                                "Content-Type": "multipart/form-data",
-                              },
-                            }
-                          );
-                          deptForm.setFieldsValue({ image_url: res.data.url });
-                          message.success(t("upload_success"));
-                          opts.onSuccess?.(res.data);
-                        } catch (e) {
-                          message.error(t("upload_fail"));
-                          opts.onError?.(e);
-                        }
-                      }}
-                    >
-                      <Button icon={<UploadOutlined />}>
-                        {t("upload_image")}
-                      </Button>
-                    </Upload>
-                  </Form>
-                </Modal>
-              </Card>
-            ),
-          },
-          {
-            key: "categories",
-            label: "Categories",
-            children: (
-              <Card
-                title="Categories"
-                extra={
-                  <Button onClick={() => setOpenCategory(true)}>
-                    {t("create_category")}
-                  </Button>
-                }
-              >
-                <Table
-                  rowKey="id"
-                  dataSource={categories}
-                  columns={[
-                    { title: "ID", dataIndex: "id", width: 60 },
-                    { title: t("category_name"), dataIndex: "name" },
-                    {
-                      title: t("category_description"),
-                      dataIndex: "description",
-                    },
-                    {
-                      title: t("department"),
-                      dataIndex: "department_id",
-                      render: (id: number) =>
-                        depts.find((d) => d.id === id)?.name || id,
-                    },
-                    {
-                      title: t("actions"),
-                      render: (_: any, r: any) => (
-                        <Popconfirm
-                          title="Delete category?"
-                          onConfirm={async () => {
-                            await api.delete(`/admin/categories/${r.id}`);
-                            load();
-                          }}
-                        >
-                          <Button danger size="small">
-                            Delete
-                          </Button>
-                        </Popconfirm>
-                      ),
-                    },
-                  ]}
-                />
-                <Modal
-                  title={t("create_category")}
-                  open={openCategory}
-                  onOk={createCategory}
-                  onCancel={() => setOpenCategory(false)}
-                >
-                  <Form layout="vertical" form={categoryForm}>
-                    <Form.Item
-                      name="department_id"
-                      label={t("department")}
-                      rules={[{ required: true }]}
-                    >
-                      <Select placeholder={t("department")}>
-                        {depts.map((d: any) => (
-                          <Select.Option key={d.id} value={d.id}>
-                            {d.name}
-                          </Select.Option>
-                        ))}
-                      </Select>
-                    </Form.Item>
-                    <Form.Item
-                      name="name"
-                      label={t("category_name")}
-                      rules={[{ required: true }]}
-                    >
-                      <Input />
-                    </Form.Item>
-                    <Form.Item
-                      name="description"
-                      label={t("category_description")}
-                    >
-                      <Input />
-                    </Form.Item>
-                  </Form>
-                </Modal>
-              </Card>
-            ),
-          },
-          {
-            key: "orders",
-            label: t("orders"),
-            children: (
-              <Card title={t("orders_title")}>
-                <Table
-                  rowKey="id"
-                  dataSource={orders}
-                  columns={[
-                    { title: t("orders.col.id"), dataIndex: "id" },
-                    {
-                      title: t("orders.col.status"),
-                      dataIndex: "status",
-                      render: (s: string) => <Tag>{s}</Tag>,
-                    },
-                    {
-                      title: t("orders.col.payment_status"),
-                      dataIndex: "payment_status",
-                    },
-                    { title: t("orders.col.total"), dataIndex: "total_price" },
-                    {
-                      title: t("actions"),
-                      render: (_: any, r: any) => (
-                        <>
-                          {[
-                            "нов",
-                            "в производство",
-                            "готов за доставка",
-                            "доставен",
-                            "отказан",
-                            "в обработка",
-                          ].map((st) => (
-                            <Button
-                              key={st}
-                              size="small"
-                              style={{ marginRight: 4 }}
-                              onClick={() => setStatus(r.id, st)}
-                            >
-                              {st}
-                            </Button>
-                          ))}
-                        </>
-                      ),
-                    },
-                  ]}
-                />
-              </Card>
-            ),
-          },
-        ]}
-      />
-
+      <Card style={{ marginBottom: 16 }}>
+        <Button type="link" onClick={() => nav("/admin/departments")}>
+          Departments
+        </Button>
+        <Button type="link" onClick={() => nav("/admin/categories")}>
+          Categories
+        </Button>
+        <Button type="link" onClick={() => nav("/admin/products")}>
+          Products
+        </Button>
+      </Card>
       <Card
         title={t("products")}
-        style={{ marginTop: 16 }}
         extra={
           <Button
             onClick={() => {
@@ -414,10 +179,7 @@ export default function AdminDashboard() {
           columns={[
             { title: "ID", dataIndex: "id", width: 60 },
             { title: t("product_name"), dataIndex: "name" },
-            {
-              title: t("product_description"),
-              dataIndex: "short_description",
-            },
+            { title: t("product_description"), dataIndex: "short_description" },
             { title: t("product_price"), dataIndex: "base_price" },
             {
               title: t("orders.col.eta_days"),

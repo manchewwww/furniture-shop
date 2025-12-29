@@ -9,6 +9,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Orders from "./pages/Orders";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminDepartments from "./pages/AdminDepartments";
+import AdminCategories from "./pages/AdminCategories";
+import AdminProducts from "./pages/AdminProducts";
 import { CartProvider } from "./store/CartContext";
 import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./store/I18nContext";
@@ -48,7 +51,7 @@ export default function App() {
                 )}
                 {user?.role === "admin" && (
                   <Menu.Item key="admin">
-                    <Link to="/admin">{t("nav.admin")}</Link>
+                    <Link to="/admin/products">{t("nav.admin")}</Link>
                   </Menu.Item>
                 )}
                 <Menu.Item
@@ -122,6 +125,24 @@ export default function App() {
               path="/admin"
               element={
                 <RequireRole role="admin">{<AdminDashboard />}</RequireRole>
+              }
+            />
+            <Route
+              path="/admin/departments"
+              element={
+                <RequireRole role="admin">{<AdminDepartments />}</RequireRole>
+              }
+            />
+            <Route
+              path="/admin/categories"
+              element={
+                <RequireRole role="admin">{<AdminCategories />}</RequireRole>
+              }
+            />
+            <Route
+              path="/admin/products"
+              element={
+                <RequireRole role="admin">{<AdminProducts />}</RequireRole>
               }
             />
           </Routes>

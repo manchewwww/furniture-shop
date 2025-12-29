@@ -60,5 +60,6 @@ func AutoMigrateAndSeed() error {
 	); err != nil {
 		return err
 	}
-	return seedData()
+	// return seedData()
+	return nil
 }

@@ -104,6 +104,31 @@ const dict: Record<Lang, Record<string, string>> = {
     "admin.actions": "Actions",
     "admin.orders": "Orders",
     "admin.orders_title": "Orders Management",
+
+    "departments": "Departments",
+    "create_department": "Create Department",
+    "department_name": "Name",
+    "department_description": "Description",
+    "department_image": "Image (URL)",
+    "products": "Products",
+    "create_product": "Add Product",
+    "edit_product": "Edit Product",
+    "product_name": "Name",
+    "product_description": "Description",
+    "product_price": "Price",
+    "product_image": "Image (URL)",
+    "category": "Category",
+    "create_category": "Create Category",
+    "category_name": "Category Name",
+    "category_description": "Category Description",
+    "department": "Department",
+    "product_production_days": "Estimated delivery (days)",
+    "upload_image": "Upload Image",
+    "upload_success": "Uploaded",
+    "upload_fail": "Upload failed",
+    "actions": "Actions",
+    "orders": "Orders",
+    "orders_title": "Orders Management",
   },
   bg: {
     "nav.home": "Начало",
@@ -204,7 +229,7 @@ export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
     setLangState(l);
     localStorage.setItem("lang", l);
   };
-  const t = (k: string) => dict[lang][k] ?? k;
+  const t = (k: string) => (dict[lang] && dict[lang][k] !== undefined ? dict[lang][k] : (dict["en"][k] ?? k));
   const value = useMemo(() => ({ lang, setLang, t }), [lang]);
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 };
