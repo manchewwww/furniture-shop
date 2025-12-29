@@ -48,16 +48,25 @@ export default function ProductDetails() {
           </p>
           <div style={{ margin: "12px 0" }}>
             <Typography.Text>{t("product.options")}:</Typography.Text>
-            <Select
-              mode="multiple"
-              placeholder={t("product.select_options")}
-              style={{ minWidth: 320 }}
-              onChange={(vals) => setSelected(vals as number[])}
-              options={(product.options || []).map((o: any) => ({
-                value: o.id,
-                label: `${o.option_name} (${o.option_type})`,
-              }))}
-            />
+            {product.options && product.options.length > 0 ? (
+              <Select
+                mode="multiple"
+                placeholder={
+                  t("product.select_options") ||
+                  "Select options (colours, materials, extras)"
+                }
+                style={{ minWidth: 320 }}
+                onChange={(vals) => setSelected(vals as number[])}
+                options={(product.options || []).map((o: any) => ({
+                  value: o.id,
+                  label: `${o.option_name} (${o.option_type})`,
+                }))}
+              />
+            ) : (
+              <Typography.Text type="secondary" style={{ marginLeft: 8 }}>
+                This product has no configurable options.
+              </Typography.Text>
+            )}
           </div>
           <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
             <Typography.Text>{t("product.quantity")}:</Typography.Text>

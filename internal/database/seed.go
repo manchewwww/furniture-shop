@@ -21,9 +21,9 @@ func seedData() error {
 
 	log.Println("Seeding sample data...")
 	depts := []ec.Department{
-		{Name: "Living Room", Description: "Furniture for living spaces"},
-		{Name: "Bedroom", Description: "Furniture for bedrooms"},
-		{Name: "Kitchen", Description: "Furniture for kitchens"},
+		{Name: "Living Room", Description: "Furniture for living spaces", ImageURL: "https://via.placeholder.com/600x400?text=Living+Room"},
+		{Name: "Bedroom", Description: "Furniture for bedrooms", ImageURL: "https://via.placeholder.com/600x400?text=Bedroom"},
+		{Name: "Kitchen", Description: "Furniture for kitchens", ImageURL: "https://via.placeholder.com/600x400?text=Kitchen"},
 	}
 	for i := range depts {
 		if err := DB.Create(&depts[i]).Error; err != nil {
@@ -113,6 +113,10 @@ func seedData() error {
 		{ProductID: a.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
 		{ProductID: a.ID, OptionType: "extra", OptionName: "LED Lighting", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
 		{ProductID: c.ID, OptionType: "extra", OptionName: "Mattress", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},
+		// Color options
+		{ProductID: a.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
+		{ProductID: a.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
+		{ProductID: a.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
 	}
 	for i := range opts {
 		if err := DB.Create(&opts[i]).Error; err != nil {
