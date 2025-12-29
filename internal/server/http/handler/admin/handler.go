@@ -12,9 +12,13 @@ import (
 	"furniture-shop/internal/service"
 )
 
-type Handler struct{ svc service.AdminService }
+type Handler struct {
+	svc service.AdminService
+}
 
-func NewAdminHandler(svc service.AdminService) *Handler { return &Handler{svc: svc} }
+func NewAdminHandler(svc service.AdminService) *Handler {
+	return &Handler{svc: svc}
+}
 
 // Departments
 func (h *Handler) ListDepartments() fiber.Handler {
@@ -26,6 +30,7 @@ func (h *Handler) ListDepartments() fiber.Handler {
 		return c.JSON(items)
 	}
 }
+
 func (h *Handler) CreateDepartment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Department
@@ -41,6 +46,7 @@ func (h *Handler) CreateDepartment() fiber.Handler {
 		return c.JSON(in)
 	}
 }
+
 func (h *Handler) UpdateDepartment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Department
@@ -55,6 +61,7 @@ func (h *Handler) UpdateDepartment() fiber.Handler {
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 }
+
 func (h *Handler) DeleteDepartment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var id uint
@@ -78,6 +85,7 @@ func (h *Handler) ListCategories() fiber.Handler {
 		return c.JSON(items)
 	}
 }
+
 func (h *Handler) CreateCategory() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Category
@@ -93,6 +101,7 @@ func (h *Handler) CreateCategory() fiber.Handler {
 		return c.JSON(in)
 	}
 }
+
 func (h *Handler) UpdateCategory() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Category
@@ -109,6 +118,7 @@ func (h *Handler) UpdateCategory() fiber.Handler {
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 }
+
 func (h *Handler) DeleteCategory() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var id uint
@@ -132,6 +142,7 @@ func (h *Handler) ListProducts() fiber.Handler {
 		return c.JSON(items)
 	}
 }
+
 func (h *Handler) CreateProduct() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Product
@@ -147,6 +158,7 @@ func (h *Handler) CreateProduct() fiber.Handler {
 		return c.JSON(in)
 	}
 }
+
 func (h *Handler) UpdateProduct() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.Product
@@ -163,6 +175,7 @@ func (h *Handler) UpdateProduct() fiber.Handler {
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 }
+
 func (h *Handler) DeleteProduct() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var id uint
@@ -194,6 +207,7 @@ func (h *Handler) ListProductOptions() fiber.Handler {
 		return c.JSON(items)
 	}
 }
+
 func (h *Handler) CreateProductOption() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.ProductOption
@@ -209,6 +223,7 @@ func (h *Handler) CreateProductOption() fiber.Handler {
 		return c.JSON(in)
 	}
 }
+
 func (h *Handler) UpdateProductOption() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var in ec.ProductOption
@@ -225,6 +240,7 @@ func (h *Handler) UpdateProductOption() fiber.Handler {
 		return c.JSON(fiber.Map{"message": "updated"})
 	}
 }
+
 func (h *Handler) DeleteProductOption() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var id uint
