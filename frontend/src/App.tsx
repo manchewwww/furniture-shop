@@ -1,5 +1,5 @@
 import { Layout, Menu, Select } from "antd";
-import { Link, Route, Routes, useNavigate } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useNavigate } from "react-router-dom";
 import Home from "./pages/Home";
 import Catalog from "./pages/Catalog";
 import ProductDetails from "./pages/ProductDetails";
@@ -8,7 +8,7 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Orders from "./pages/Orders";
-import AdminDashboard from "./pages/AdminDashboard";
+import AdminLayout from "./components/AdminLayout";
 import AdminDepartments from "./pages/AdminDepartments";
 import AdminCategories from "./pages/AdminCategories";
 import AdminProducts from "./pages/AdminProducts";
@@ -52,7 +52,7 @@ export default function App() {
                 )}
                 {user?.role === "admin" && (
                   <Menu.Item key="admin">
-                    <Link to="/admin/products">{t("nav.admin")}</Link>
+                    <Link to="/admin">{t("nav.admin")}</Link>
                   </Menu.Item>
                 )}
                 <Menu.Item
@@ -125,33 +125,15 @@ export default function App() {
             <Route
               path="/admin"
               element={
-                <RequireRole role="admin">{<AdminDashboard />}</RequireRole>
+                <RequireRole role="admin">{<AdminLayout />}</RequireRole>
               }
-            />
-            <Route
-              path="/admin/departments"
-              element={
-                <RequireRole role="admin">{<AdminDepartments />}</RequireRole>
-              }
-            />
-            <Route
-              path="/admin/categories"
-              element={
-                <RequireRole role="admin">{<AdminCategories />}</RequireRole>
-              }
-            />
-            <Route
-              path="/admin/products"
-              element={
-                <RequireRole role="admin">{<AdminProducts />}</RequireRole>
-              }
-            />
-            <Route
-              path="/admin/orders"
-              element={
-                <RequireRole role="admin">{<AdminOrders />}</RequireRole>
-              }
-            />
+            >
+              <Route index element={<Navigate to="products" replace />} />
+              <Route path="departments" element={<AdminDepartments />} />
+              <Route path="categories" element={<AdminCategories />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="orders" element={<AdminOrders />} />
+            </Route>
           </Routes>
         </Content>
         <Footer style={{ textAlign: "center" }}>

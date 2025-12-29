@@ -13,7 +13,6 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useI18n } from "../store/I18nContext";
 import { useNavigate } from "react-router-dom";
-import AdminNav from "../components/AdminNav";
 
 export default function AdminCategories() {
   const { t } = useI18n();
@@ -50,7 +49,6 @@ export default function AdminCategories() {
 
   return (
     <div>
-      <AdminNav />
       <Card
         title="Categories"
         extra={
