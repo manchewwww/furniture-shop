@@ -27,11 +27,16 @@ func LoadEnvFile() error {
 	if dbPass == "" {
 		return fmt.Errorf("DB_PASSWORD is required")
 	}
+	stripeSecretKey := os.Getenv("STRIPE_SECRET_KEY")
+	if stripeSecretKey == "" {
+		return fmt.Errorf("STRIPE_SECRET_KEY is required")
+	}
 
 	Env = EnvConfig{
-		DBUser:    dbUser,
-		DBPass:    dbPass,
-		JWTSecret: jwtSecret,
+		DBUser:          dbUser,
+		DBPass:          dbPass,
+		JWTSecret:       jwtSecret,
+		StripeSecretKey: stripeSecretKey,
 	}
 
 	return nil

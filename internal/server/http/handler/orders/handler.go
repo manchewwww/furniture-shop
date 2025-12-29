@@ -2,10 +2,14 @@ package orders
 
 import (
 	"fmt"
-	"os"
+	"math"
+	"strconv"
 
 	"github.com/gofiber/fiber/v2"
+	stripe "github.com/stripe/stripe-go/v84"
+	session "github.com/stripe/stripe-go/v84/checkout/session"
 
+	"furniture-shop/internal/config"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
 )
@@ -80,15 +84,47 @@ func (h *Handler) CreateOrder() fiber.Handler {
 				"instructions":                   instructions,
 			})
 		case "card":
-			checkoutURL := os.Getenv("STRIPE_DEMO_CHECKOUT_URL")
-			if checkoutURL == "" {
-				fe := os.Getenv("FRONTEND_URL")
-				if fe == "" {
-					fe = "http://localhost:5173"
-				}
-				checkoutURL = fmt.Sprintf("%s/payment/success?order_id=%d", fe, order.ID)
+			fe := "http://localhost:5173"
+			//Payment succeeds - 4242 4242 4242 4242
+			//Payment requires authentication - 4000 0025 0000 3155
+			//Payment is declined- 4000 0000 0000 9995
+			stripe.Key = config.Env.StripeSecretKey
+
+			amount := int64(math.Round(order.TotalPrice * 100))
+
+			params := &stripe.CheckoutSessionParams{
+				Mode: stripe.String(string(stripe.CheckoutSessionModePayment)),
+				SuccessURL: stripe.String(fmt.Sprintf(
+					"%s/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=%d",
+					fe, order.ID,
+				)),
+				CancelURL: stripe.String(fmt.Sprintf(
+					"%s/payment/cancel?order_id=%d",
+					fe, order.ID,
+				)),
+				Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+				LineItems: []*stripe.CheckoutSessionLineItemParams{{
+					PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+						Currency: stripe.String("eur"),
+						ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+							Name: stripe.String(fmt.Sprintf("Order #%d", order.ID)),
+						},
+						UnitAmount: stripe.Int64(amount),
+					},
+					Quantity: stripe.Int64(1),
+				}},
 			}
-			return c.JSON(fiber.Map{"order_id": order.ID, "checkout_url": checkoutURL})
+
+			sess, err := session.New(params)
+			if err != nil {
+				return c.Status(500).JSON(fiber.Map{"message": "stripe error"})
+			}
+
+			return c.JSON(fiber.Map{
+				"order_id":                       order.ID,
+				"checkout_url":                   sess.URL,
+				"estimated_production_time_days": order.EstimatedProductionTimeDays,
+			})
 		default:
 			return c.JSON(fiber.Map{
 				"order_id": order.ID, "total_price": order.TotalPrice,
