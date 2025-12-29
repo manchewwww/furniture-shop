@@ -20,11 +20,10 @@ func seedData() error {
 	}
 
 	log.Println("Seeding sample data...")
-	// Departments
 	depts := []ec.Department{
-		{Name: "Дневна", Description: "Мебели за дневна стая"},
-		{Name: "Спалня", Description: "Мебели за спалня"},
-		{Name: "Кухня", Description: "Мебели за кухня"},
+		{Name: "Living Room", Description: "Furniture for living spaces"},
+		{Name: "Bedroom", Description: "Furniture for bedrooms"},
+		{Name: "Kitchen", Description: "Furniture for kitchens"},
 	}
 	for i := range depts {
 		if err := DB.Create(&depts[i]).Error; err != nil {
@@ -33,18 +32,17 @@ func seedData() error {
 	}
 
 	var dLiving, dBedroom, dKitchen ec.Department
-	DB.Where("name = ?", "Дневна").First(&dLiving)
-	DB.Where("name = ?", "Спалня").First(&dBedroom)
-	DB.Where("name = ?", "Кухня").First(&dKitchen)
+	DB.Where("name = ?", "Living Room").First(&dLiving)
+	DB.Where("name = ?", "Bedroom").First(&dBedroom)
+	DB.Where("name = ?", "Kitchen").First(&dKitchen)
 
-	// Categories per department
 	cats := []ec.Category{
-		{Name: "Шкафове", Description: "Шкафове и витрини", DepartmentID: dLiving.ID},
-		{Name: "Етажерки", Description: "Етажерки и рафтове", DepartmentID: dLiving.ID},
-		{Name: "Легла", Description: "Легла и нощни шкафчета", DepartmentID: dBedroom.ID},
-		{Name: "Гардероби", Description: "Гардероби", DepartmentID: dBedroom.ID},
-		{Name: "Кухненски шкафове", Description: "Горни и долни модули", DepartmentID: dKitchen.ID},
-		{Name: "Маси", Description: "Кухненски маси", DepartmentID: dKitchen.ID},
+		{Name: "Shelves", Description: "Wall and standing shelves", DepartmentID: dLiving.ID},
+		{Name: "Storage Cabinets", Description: "Cabinets and sideboards", DepartmentID: dLiving.ID},
+		{Name: "Beds", Description: "Single and double beds", DepartmentID: dBedroom.ID},
+		{Name: "Wardrobes", Description: "Sliding and hinged wardrobes", DepartmentID: dBedroom.ID},
+		{Name: "Kitchen Cabinets", Description: "Base and wall units", DepartmentID: dKitchen.ID},
+		{Name: "Tables", Description: "Dining tables", DepartmentID: dKitchen.ID},
 	}
 	for i := range cats {
 		if err := DB.Create(&cats[i]).Error; err != nil {
@@ -52,20 +50,19 @@ func seedData() error {
 		}
 	}
 
-	// Products: add 8-10 per some categories
 	rand.Seed(time.Now().UnixNano())
 	var catWardrobes, catShelves, catBeds ec.Category
-	DB.Where("name = ?", "Гардероби").First(&catWardrobes)
-	DB.Where("name = ?", "Етажерки").First(&catShelves)
-	DB.Where("name = ?", "Легла").First(&catBeds)
+	DB.Where("name = ?", "Wardrobes").First(&catWardrobes)
+	DB.Where("name = ?", "Shelves").First(&catShelves)
+	DB.Where("name = ?", "Beds").First(&catBeds)
 
 	var products []ec.Product
 	for i := 1; i <= 10; i++ {
 		products = append(products, ec.Product{
 			CategoryID:             catWardrobes.ID,
-			Name:                   "Гардероб Модел " + itoa(i),
-			ShortDescription:       "Гардероб с плъзгащи врати",
-			LongDescription:        "Качествен гардероб с възможност за избор на материал и размери.",
+			Name:                   "Modular Wardrobe " + itoa(i),
+			ShortDescription:       "Modular wardrobe with customizable layout",
+			LongDescription:        "Configurable wardrobe with options for shelves, drawers, and lighting.",
 			BasePrice:              float64(700 + i*20),
 			BaseProductionTimeDays: 14 + (i%3)*7,
 			ImageURL:               "https://via.placeholder.com/400x300",
@@ -77,9 +74,9 @@ func seedData() error {
 	for i := 1; i <= 8; i++ {
 		products = append(products, ec.Product{
 			CategoryID:             catShelves.ID,
-			Name:                   "Етажерка Модел " + itoa(i),
-			ShortDescription:       "Стенна етажерка",
-			LongDescription:        "Практична етажерка за книги и декорации.",
+			Name:                   "Wall Shelf " + itoa(i),
+			ShortDescription:       "Minimal wall shelf",
+			LongDescription:        "Compact shelving for books and decor with concealed mounts.",
 			BasePrice:              float64(120 + i*10),
 			BaseProductionTimeDays: 7 + (i%2)*3,
 			ImageURL:               "https://via.placeholder.com/400x300",
@@ -91,13 +88,13 @@ func seedData() error {
 	for i := 1; i <= 9; i++ {
 		products = append(products, ec.Product{
 			CategoryID:             catBeds.ID,
-			Name:                   "Легло Комфорт " + itoa(i),
-			ShortDescription:       "Двойно легло",
-			LongDescription:        "Удобно двойно легло с опция за чекмеджета.",
+			Name:                   "Double Bed " + itoa(i),
+			ShortDescription:       "Comfortable bed",
+			LongDescription:        "Sturdy bed frame with optional storage and headboard.",
 			BasePrice:              float64(650 + i*30),
 			BaseProductionTimeDays: 21,
 			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "масив",
+			BaseMaterial:           "Wood",
 			DefaultWidth:           160, DefaultHeight: 40, DefaultDepth: 200,
 			IsMadeToOrder: true,
 		})
@@ -108,15 +105,14 @@ func seedData() error {
 		}
 	}
 
-	// Add a few options to first product of each category
 	var a, b, c ec.Product
 	DB.Where("category_id = ?", catWardrobes.ID).First(&a)
 	DB.Where("category_id = ?", catShelves.ID).First(&b)
 	DB.Where("category_id = ?", catBeds.ID).First(&c)
 	opts := []ec.ProductOption{
-		{ProductID: a.ID, OptionType: "material", OptionName: "Масив", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
-		{ProductID: a.ID, OptionType: "extra", OptionName: "LED осветление", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
-		{ProductID: c.ID, OptionType: "extra", OptionName: "Чекмеджета", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},
+		{ProductID: a.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
+		{ProductID: a.ID, OptionType: "extra", OptionName: "LED Lighting", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
+		{ProductID: c.ID, OptionType: "extra", OptionName: "Mattress", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},
 	}
 	for i := range opts {
 		if err := DB.Create(&opts[i]).Error; err != nil {
@@ -124,8 +120,7 @@ func seedData() error {
 		}
 	}
 
-	// Admin user (password: admin123)
-	admin := models.User{Role: "admin", Name: "Администратор", Email: "admin@example.com", Address: "София", Phone: "+359888000000"}
+	admin := models.User{Role: "admin", Name: "Administrator", Email: "admin@example.com", Address: "Sofia", Phone: "+359888000000"}
 	if err := admin.SetPassword("admin123"); err != nil {
 		return err
 	}
