@@ -29,7 +29,7 @@ type createOrderDTO struct {
 	Address       string        `json:"address" validate:"required,min=5"`
 	Phone         string        `json:"phone" validate:"required,phone"`
 	Items         []orderItemIn `json:"items" validate:"required,min=1,dive"`
-	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card cod bank"`
+	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card bank"`
 }
 
 func (h *Handler) CreateOrder() fiber.Handler {
@@ -40,6 +40,11 @@ func (h *Handler) CreateOrder() fiber.Handler {
 		}
 		if err := vld.ValidateStruct(in); err != nil {
 			return err
+		}
+		if uidVal := c.Locals("user_id"); uidVal != nil {
+			if uid, ok := uidVal.(uint); ok {
+				in.UserID = &uid
+			}
 		}
 		items := make([]service.CreateOrderItem, 0, len(in.Items))
 		for _, it := range in.Items {

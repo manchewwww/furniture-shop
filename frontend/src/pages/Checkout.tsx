@@ -13,7 +13,7 @@ import { useCart } from "../store/CartContext";
 import { createOrder, payByCard } from "../api/orders";
 import { useI18n } from "../store/I18nContext";
 
-type PaymentMethod = "card" | "cod" | "bank";
+type PaymentMethod = "card" | "bank";
 
 function luhnValid(digits: string) {
   let sum = 0;
@@ -251,10 +251,6 @@ export default function Checkout() {
                   {
                     value: "card",
                     label: t("checkout.payment.card") || "Card",
-                  },
-                  {
-                    value: "cod",
-                    label: t("checkout.payment.cod") || "Cash on Delivery",
                   },
                   {
                     value: "bank",

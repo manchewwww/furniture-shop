@@ -1,11 +1,12 @@
 import { Button, Card, Form, Input, Typography, message } from "antd";
 import { login } from "../api/auth";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { useI18n } from "../store/I18nContext";
 
 export default function Login() {
   const nav = useNavigate();
+  const location = useLocation() as any;
   const { refresh } = useAuth();
   const { t } = useI18n();
   const onFinish = async (v: any) => {
@@ -13,13 +14,20 @@ export default function Login() {
       await login(v.email, v.password);
       await refresh();
       message.success(t("login.success"));
-      nav("/");
+      const to = location.state?.from?.pathname || "/";
+      nav(to, { replace: true });
     } catch {
       message.error(t("login.error"));
     }
   };
   return (
     <Card title={t("login.title")} style={{ maxWidth: 420 }}>
+      {location.state?.from && (
+        <Typography.Paragraph style={{ marginBottom: 12 }}>
+          {t("login.required_for_checkout") ||
+            "Please login to continue to checkout."}
+        </Typography.Paragraph>
+      )}
       <Form layout="vertical" onFinish={onFinish}>
         <Form.Item
           name="email"
@@ -41,7 +49,9 @@ export default function Login() {
       </Form>
       <Typography.Paragraph style={{ marginTop: 12 }}>
         {t("login.register_cta")}{" "}
-        <Link to="/register">{t("nav.register")}</Link>
+        <Link to="/register" state={location.state}>
+          {t("nav.register")}
+        </Link>
       </Typography.Paragraph>
     </Card>
   );

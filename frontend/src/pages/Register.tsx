@@ -1,11 +1,12 @@
 import { Button, Card, Form, Input, Typography, message } from "antd";
 import { register } from "../api/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../store/AuthContext";
 import { useI18n } from "../store/I18nContext";
 
 export default function Register() {
   const nav = useNavigate();
+  const location = useLocation() as any;
   const { refresh } = useAuth();
   const { t } = useI18n();
   const onFinish = async (v: any) => {
@@ -13,7 +14,8 @@ export default function Register() {
       await register(v);
       await refresh();
       message.success(t("register.success"));
-      nav("/");
+      const to = location.state?.from?.pathname || "/";
+      nav(to, { replace: true });
     } catch {
       message.error(t("register.error"));
     }

@@ -28,7 +28,7 @@ func buildRoutes(s *Server) {
 	hc.Register(api, catalogH)
 
 	// Orders and payments
-	api.Post("/orders", ordersH.CreateOrder())
+	api.Post("/orders", middleware.JWTAuth(), ordersH.CreateOrder())
 	hp.Register(api, paymentsH)
 
 	// Authenticated user routes

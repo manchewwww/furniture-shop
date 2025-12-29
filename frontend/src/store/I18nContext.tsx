@@ -41,6 +41,7 @@ const dict: Record<Lang, Record<string, string>> = {
     "checkout.success": "Order created successfully",
     "checkout.error": "Failed to create order",
     "checkout.card.title": "Pay by Card",
+    "checkout.card.order_created": "Order created. Please enter your card details to pay.",
     "checkout.cardholder_name": "Cardholder Name",
     "checkout.card_number": "Card Number",
     "checkout.exp_month": "Month",
@@ -48,6 +49,10 @@ const dict: Record<Lang, Record<string, string>> = {
     "checkout.pay": "Pay",
     "checkout.pay.success": "Payment successful",
     "checkout.pay.error": "Payment declined",
+    "checkout.payment.card": "Card",
+    "checkout.payment.bank": "Bank Transfer",
+    "checkout.noncard.instructions": "We will contact you with payment instructions.",
+    "checkout.empty_cart": "Your cart is empty.",
 
     "login.title": "Login",
     "login.email": "Email",
@@ -56,6 +61,7 @@ const dict: Record<Lang, Record<string, string>> = {
     "login.success": "Logged in successfully",
     "login.error": "Invalid email or password",
     "login.register_cta": "Don't have an account?",
+    "login.required_for_checkout": "Please login to continue to checkout.",
 
     "register.title": "Register",
     "register.name": "Name",
@@ -239,3 +245,4 @@ export const useI18n = () => {
   if (!ctx) throw new Error("I18nProvider is missing");
   return ctx;
 };
+
