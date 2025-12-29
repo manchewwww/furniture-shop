@@ -1,4 +1,4 @@
-import { Card, Col, Row, Select, Typography } from "antd";
+import { Button, Card, Col, Row, Typography } from "antd";
 import { useEffect, useState } from "react";
 import {
   fetchCategories,
@@ -33,29 +33,69 @@ export default function Catalog() {
   return (
     <div>
       <Typography.Title level={2}>{t("catalog.title")}</Typography.Title>
-      <div style={{ display: "flex", gap: 12, marginBottom: 16 }}>
-        <Select
-          placeholder={t("catalog.select.department")}
-          style={{ minWidth: 220 }}
-          onChange={(v) => {
-            setDeptId(v);
-            setSearchParams((sp) => {
-              const next = new URLSearchParams(sp);
-              next.set("dept", String(v));
-              return next;
-            });
-            setCatId(undefined);
-            setProducts([]);
-          }}
-          options={depts.map((d) => ({ value: d.id, label: d.name }))}
-        />
-        <Select
-          placeholder={t("catalog.select.category")}
-          style={{ minWidth: 220 }}
-          onChange={setCatId}
-          options={cats.map((c) => ({ value: c.id, label: c.name }))}
-        />
-      </div>
+      {(deptId || catId) && (
+        <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
+          {deptId && (
+            <Button
+              size="small"
+              onClick={() => {
+                setDeptId(undefined);
+                setCatId(undefined);
+                setSearchParams((sp) => {
+                  const next = new URLSearchParams(sp);
+                  next.delete("dept");
+                  return next;
+                });
+              }}
+            >
+              All Departments
+            </Button>
+          )}
+          {deptId && catId && (
+            <Button size="small" onClick={() => setCatId(undefined)}>
+              All Categories
+            </Button>
+          )}
+        </div>
+      )}
+
+      {!deptId && (
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+          {depts.map((d) => {
+            const origin = (() => {
+              try {
+                return new URL(api.defaults.baseURL as string).origin;
+              } catch {
+                return "";
+              }
+            })();
+            const img =
+              d.image_url && !/^https?:/i.test(d.image_url)
+                ? origin + d.image_url
+                : d.image_url;
+            return (
+              <Col key={d.id} xs={24} sm={12} md={8}>
+                <Card
+                  hoverable
+                  title={d.name}
+                  cover={img ? <img src={img} alt={d.name} /> : undefined}
+                  onClick={() => {
+                    setDeptId(d.id);
+                    setCatId(undefined);
+                    setSearchParams((sp) => {
+                      const next = new URLSearchParams(sp);
+                      next.set("dept", String(d.id));
+                      return next;
+                    });
+                  }}
+                >
+                  <p>{d.description}</p>
+                </Card>
+              </Col>
+            );
+          })}
+        </Row>
+      )}
       {!!deptId && cats.length > 0 && !catId && (
         <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
           {cats.map((c) => (
