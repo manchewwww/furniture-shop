@@ -40,15 +40,9 @@ func (s *paymentService) PayByCard(ctx context.Context, in service.CardPayment) 
 	return eo.PaymentStatusPaid, nil
 }
 
-func (s *paymentService) ProcessPaymentResult(ctx context.Context, orderID uint, success bool) error {
-	if success {
-		if err := s.orders.UpdatePaymentStatus(ctx, orderID, eo.PaymentStatusPaid); err != nil {
-			return err
-		}
-		return s.orders.UpdateStatus(ctx, orderID, eo.OrderStatusProcessing)
-	}
-	if err := s.orders.UpdatePaymentStatus(ctx, orderID, eo.PaymentStatusDeclined); err != nil {
+func (s *paymentService) ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error {
+	if err := s.orders.UpdatePaymentStatus(ctx, orderID, paymentStatus); err != nil {
 		return err
 	}
-	return s.orders.UpdateStatus(ctx, orderID, eo.OrderStatusCancelled)
+	return s.orders.UpdateStatus(ctx, orderID, orderStatus)
 }

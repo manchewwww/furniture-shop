@@ -36,7 +36,7 @@ export default function Orders() {
           {
             title: "Actions",
             render: (_: any, row: any) => {
-              const canPay = row.payment_status === "declined";
+              const canPay = row.payment_status != "paid";
               return (
                 <Button
                   size="small"

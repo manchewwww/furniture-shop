@@ -12,9 +12,10 @@ const (
 
 // Payment statuses
 const (
-	PaymentStatusPending  = "pending"
-	PaymentStatusPaid     = "paid"
-	PaymentStatusDeclined = "declined"
+	PaymentStatusPending   = "pending"
+	PaymentStatusPaid      = "paid"
+	PaymentStatusCancelled = "cancelled"
+	PaymentStatusDeclined  = "declined"
 )
 
 // Payment methods

@@ -3,8 +3,10 @@ package payments
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 
 	"furniture-shop/internal/config"
+	eo "furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
 
@@ -46,81 +48,58 @@ func (h *Handler) StripeWebhook() fiber.Handler {
 		payload := c.BodyRaw()
 		sig := c.Get("Stripe-Signature")
 
-		evt, err := webhook.ConstructEvent(payload, sig, config.Env.StripeWebhookSecret)
+		event, err := webhook.ConstructEvent(payload, sig, config.Env.StripeWebhookSecret)
 		if err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid signature"})
+			log.Printf("stripe webhook signature error: %v", err)
+			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"message": "invalid signature"})
 		}
 
-		switch evt.Type {
-		case "checkout.session.completed", "checkout.session.async_payment_succeeded":
-			var sess stripe.CheckoutSession
-			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
-				return c.SendStatus(200)
+		update := func(orderID uint, paymentStatus, orderStatus string) {
+			if err := h.svc.ProcessPaymentResult(c.Context(), orderID, paymentStatus, orderStatus); err != nil {
+				log.Printf("ProcessPaymentResult failed (order=%d paid-status=%v order-status=%v): %v", orderID, paymentStatus, orderStatus, err)
 			}
+		}
 
-			orderIDStr := sess.ClientReferenceID
-			if orderIDStr == "" {
-				orderIDStr = sess.Metadata["order_id"]
+		parseOID := func(s string) (uint, bool) {
+			var oid uint
+			if s == "" {
+				return 0, false
 			}
+			if _, err := fmt.Sscan(s, &oid); err != nil {
+				return 0, false
+			}
+			return oid, true
+		}
 
-			if orderIDStr != "" && sess.PaymentStatus == stripe.CheckoutSessionPaymentStatusPaid {
-				var oid uint
-				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
-					_ = h.svc.ProcessPaymentResult(c.Context(), oid, true)
+		switch event.Type {
+
+		case "payment_intent.succeeded":
+			var pi stripe.PaymentIntent
+			if err := json.Unmarshal(event.Data.Raw, &pi); err == nil {
+				if oid, ok := parseOID(pi.Metadata["order_id"]); ok {
+					update(oid, eo.PaymentStatusPaid, eo.OrderStatusProcessing)
 				}
 			}
-
-		case "checkout.session.expired":
-			var sess stripe.CheckoutSession
-			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
-				return c.SendStatus(200)
-			}
-
-			orderIDStr := sess.ClientReferenceID
-			if orderIDStr == "" {
-				orderIDStr = sess.Metadata["order_id"]
-			}
-
-			if orderIDStr != "" {
-				var oid uint
-				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
-					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
-				}
-			}
-
-		case "checkout.session.async_payment_failed":
-			var sess stripe.CheckoutSession
-			if err := json.Unmarshal(evt.Data.Raw, &sess); err != nil {
-				return c.SendStatus(200)
-			}
-
-			orderIDStr := sess.ClientReferenceID
-			if orderIDStr == "" {
-				orderIDStr = sess.Metadata["order_id"]
-			}
-
-			if orderIDStr != "" {
-				var oid uint
-				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
-					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
-				}
-			}
-
 		case "payment_intent.payment_failed":
 			var pi stripe.PaymentIntent
-			if err := json.Unmarshal(evt.Data.Raw, &pi); err != nil {
-				return c.SendStatus(200)
+			if err := json.Unmarshal(event.Data.Raw, &pi); err == nil {
+				if oid, ok := parseOID(pi.Metadata["order_id"]); ok {
+					update(oid, eo.PaymentStatusDeclined, eo.OrderStatusCancelled)
+				}
 			}
-
-			orderIDStr := pi.Metadata["order_id"]
-			if orderIDStr != "" {
-				var oid uint
-				if _, err := fmt.Sscan(orderIDStr, &oid); err == nil {
-					_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
+		case "checkout.session.expired":
+			var sess stripe.CheckoutSession
+			if err := json.Unmarshal(event.Data.Raw, &sess); err == nil {
+				orderIDStr := sess.ClientReferenceID
+				if orderIDStr == "" {
+					orderIDStr = sess.Metadata["order_id"]
+				}
+				if oid, ok := parseOID(orderIDStr); ok {
+					update(oid, eo.PaymentStatusCancelled, eo.OrderStatusCancelled)
 				}
 			}
 		}
 
-		return c.SendStatus(200)
+		return c.SendStatus(fiber.StatusOK)
 	}
 }

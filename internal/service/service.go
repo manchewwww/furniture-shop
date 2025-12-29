@@ -92,7 +92,7 @@ type AdminService interface {
 // Payments
 type PaymentService interface {
 	PayByCard(ctx context.Context, in CardPayment) (string, error)
-	ProcessPaymentResult(ctx context.Context, orderID uint, success bool) error
+	ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error
 }
 
 // Service is the top-level container
