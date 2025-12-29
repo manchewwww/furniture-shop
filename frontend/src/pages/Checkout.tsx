@@ -13,7 +13,7 @@ import { useCart } from "../store/CartContext";
 import { createOrder, payByCard } from "../api/orders";
 import { useI18n } from "../store/I18nContext";
 
-type PaymentMethod = "card" | "bank";
+type PaymentMethod = "card";
 
 function luhnValid(digits: string) {
   let sum = 0;
@@ -38,7 +38,6 @@ export default function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [placing, setPlacing] = useState(false);
   const [paying, setPaying] = useState(false);
-  const [bankInfo, setBankInfo] = useState<any | null>(null);
   const [orderForm] = Form.useForm();
   const [cardForm] = Form.useForm();
 
@@ -75,9 +74,6 @@ export default function Checkout() {
       if (payload.payment_method === "card" && res.checkout_url) {
         window.location.href = res.checkout_url as string;
         return;
-      }
-      if (payload.payment_method === "bank" && res.instructions) {
-        setBankInfo(res.instructions);
       }
     } catch {
       message.error(t("checkout.error") || "Failed to create order");
@@ -171,10 +167,6 @@ export default function Checkout() {
                     value: "card",
                     label: t("checkout.payment.card") || "Card",
                   },
-                  {
-                    value: "bank",
-                    label: t("checkout.payment.bank") || "Bank Transfer",
-                  },
                 ]}
               />
             </Form.Item>
@@ -187,39 +179,6 @@ export default function Checkout() {
               {t("checkout.place_order")}
             </Button>
           </Form>
-        </Card>
-      )}
-
-      {orderId && paymentMethod === "bank" && bankInfo && (
-        <Card title={t("checkout.payment.bank") || "Bank Transfer"}>
-          <Alert
-            type="success"
-            showIcon
-            style={{ marginBottom: 12 }}
-            message={t("checkout.success") || "Order created successfully."}
-          />
-          <Typography.Paragraph>
-            <b>{t("orders.col.total") || "Total"}:</b> {bankInfo.amount}{" "}
-            {bankInfo.currency}
-          </Typography.Paragraph>
-          <Typography.Paragraph>
-            <b>Beneficiary:</b> {bankInfo.beneficiary_name}
-            <br />
-            <b>Bank:</b> {bankInfo.bank_name}
-            <br />
-            <b>IBAN:</b> {bankInfo.iban}
-            <br />
-            <b>BIC:</b> {bankInfo.bic}
-          </Typography.Paragraph>
-          <Alert
-            type="info"
-            showIcon
-            message={
-              (t("checkout.noncard.instructions") ||
-                "Use this reference in the transfer:") +
-              ` ${bankInfo.payment_reference}`
-            }
-          />
         </Card>
       )}
 

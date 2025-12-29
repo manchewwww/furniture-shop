@@ -31,12 +31,17 @@ func LoadEnvFile() error {
 	if stripeSecretKey == "" {
 		return fmt.Errorf("STRIPE_SECRET_KEY is required")
 	}
+	stripeWebhookSecret := os.Getenv("STRIPE_WEBHOOK_SECRET")
+	if stripeWebhookSecret == "" {
+		return fmt.Errorf("STRIPE_WEBHOOK_SECRET is required")
+	}
 
 	Env = EnvConfig{
-		DBUser:          dbUser,
-		DBPass:          dbPass,
-		JWTSecret:       jwtSecret,
-		StripeSecretKey: stripeSecretKey,
+		DBUser:              dbUser,
+		DBPass:              dbPass,
+		JWTSecret:           jwtSecret,
+		StripeSecretKey:     stripeSecretKey,
+		StripeWebhookSecret: stripeWebhookSecret,
 	}
 
 	return nil

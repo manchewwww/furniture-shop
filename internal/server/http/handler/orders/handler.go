@@ -34,7 +34,7 @@ type createOrderDTO struct {
 	Address       string        `json:"address" validate:"required,min=5"`
 	Phone         string        `json:"phone" validate:"required,phone"`
 	Items         []orderItemIn `json:"items" validate:"required,min=1,dive"`
-	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card bank"`
+	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card"`
 }
 
 func (h *Handler) CreateOrder() fiber.Handler {
@@ -63,26 +63,6 @@ func (h *Handler) CreateOrder() fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"message": err.Error()})
 		}
 		switch in.PaymentMethod {
-		case "bank":
-			ref := fmt.Sprintf("FSH-%d", order.ID)
-			instructions := fiber.Map{
-				"beneficiary_name":  "Furniture Shop Demo",
-				"iban":              "BG00UNCR70001512345678",
-				"bic":               "UNCRBGSF",
-				"bank_name":         "UniCredit Bulbank (TEST)",
-				"amount":            order.TotalPrice,
-				"currency":          "EUR",
-				"payment_reference": ref,
-				"reason_line":       fmt.Sprintf("Order #%d - %s", order.ID, ref),
-			}
-			return c.JSON(fiber.Map{
-				"order_id":                       order.ID,
-				"total_price":                    order.TotalPrice,
-				"estimated_production_time_days": order.EstimatedProductionTimeDays,
-				"status":                         order.Status,
-				"payment_status":                 order.PaymentStatus,
-				"instructions":                   instructions,
-			})
 		case "card":
 			fe := "http://localhost:5173"
 			//Payment succeeds - 4242 4242 4242 4242
@@ -103,6 +83,9 @@ func (h *Handler) CreateOrder() fiber.Handler {
 					fe, order.ID,
 				)),
 				Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+				PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+					Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+				},
 				LineItems: []*stripe.CheckoutSessionLineItemParams{{
 					PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
 						Currency: stripe.String("eur"),
