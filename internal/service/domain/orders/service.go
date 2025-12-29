@@ -61,7 +61,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in service.CreateOrderI
 		}
 	}
 
-	order := &eo.Order{UserID: user.ID, Status: eo.OrderStatusNew, PaymentMethod: in.PaymentMethod, PaymentStatus: eo.PaymentStatusPending}
+	order := &eo.Order{UserID: user.ID, Status: eo.OrderStatusNew, PaymentMethod: in.PaymentMethod, PaymentStatus: eo.PaymentStatusProcessing}
 	var items []eo.OrderItem
 	var total float64
 	for _, it := range in.Items {
