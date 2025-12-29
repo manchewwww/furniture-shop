@@ -120,9 +120,49 @@ export default function Catalog() {
               : p.image_url;
           return (
             <Col key={p.id} xs={24} sm={12} md={8}>
-              <Card title={p.name} cover={<img src={img} alt={p.name} />}>
-                <p>{p.short_description}</p>
-                <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
+              <Card size="small">
+                <div style={{ display: "flex", gap: 12 }}>
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={p.name}
+                      style={{
+                        width: 100,
+                        height: 80,
+                        objectFit: "cover",
+                        borderRadius: 4,
+                      }}
+                    />
+                  ) : null}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
+                      {p.name}
+                    </div>
+                    <div
+                      style={{ color: "#666", marginBottom: 6, fontSize: 12 }}
+                    >
+                      {p.short_description}
+                    </div>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 12,
+                        marginBottom: 6,
+                        fontSize: 12,
+                      }}
+                    >
+                      <span>
+                        {t("product.base_price")}:{" "}
+                        {Number(p.base_price).toFixed(2)}
+                      </span>
+                      <span>
+                        {t("product.base_prod_time")}:{" "}
+                        {p.base_production_time_days}
+                      </span>
+                    </div>
+                    <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
+                  </div>
+                </div>
               </Card>
             </Col>
           );
