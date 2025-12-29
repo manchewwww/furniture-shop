@@ -77,6 +77,10 @@ export default function ProductDetails() {
           <p>
             {t("product.base_prod_time")}: {product.base_production_time_days}
           </p>
+          <p>
+            Dimensions (cm): {product.default_width}W × {product.default_height}
+            H × {product.default_depth}D
+          </p>
           <div style={{ margin: "12px 0" }}>
             <Typography.Text>{t("product.options")}:</Typography.Text>
             {product.options && product.options.length > 0 ? (

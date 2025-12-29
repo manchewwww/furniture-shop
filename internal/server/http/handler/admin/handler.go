@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -33,6 +34,22 @@ type ProductDTO struct {
 	BasePrice              float64 `json:"base_price" validate:"required,gte=0"`
 	BaseProductionTimeDays int     `json:"base_production_time_days" validate:"required,gte=0"`
 	ImageURL               string  `json:"image_url" validate:"omitempty,url"`
+	DefaultWidth           int     `json:"default_width" validate:"required,gt=0"`
+	DefaultHeight          int     `json:"default_height" validate:"required,gt=0"`
+	DefaultDepth           int     `json:"default_depth" validate:"required,gt=0"`
+}
+
+func normalizeImageURL(u string) string {
+    s := strings.TrimSpace(u)
+    if s == "" {
+        return s
+    }
+    if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
+        if i := strings.Index(s, "/uploads/"); i >= 0 {
+            return s[i:]
+        }
+    }
+    return s
 }
 
 type ProductOptionDTO struct {
@@ -196,15 +213,19 @@ func (h *Handler) CreateProduct() fiber.Handler {
 		if err := vld.ValidateStruct(in); err != nil {
 			return err
 		}
-		p := ec.Product{
-			CategoryID:             in.CategoryID,
-			Name:                   in.Name,
-			ShortDescription:       in.ShortDescription,
-			LongDescription:        in.LongDescription,
-			BasePrice:              in.BasePrice,
-			BaseProductionTimeDays: in.BaseProductionTimeDays,
-			ImageURL:               in.ImageURL,
-		}
+	img := normalizeImageURL(in.ImageURL)
+	p := ec.Product{
+		CategoryID:             in.CategoryID,
+		Name:                   in.Name,
+		ShortDescription:       in.ShortDescription,
+		LongDescription:        in.LongDescription,
+		BasePrice:              in.BasePrice,
+		BaseProductionTimeDays: in.BaseProductionTimeDays,
+		ImageURL:               img,
+		DefaultWidth:           in.DefaultWidth,
+		DefaultHeight:          in.DefaultHeight,
+		DefaultDepth:           in.DefaultDepth,
+	}
 		if err := h.svc.CreateProduct(c.Context(), &p); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
 		}
@@ -225,15 +246,19 @@ func (h *Handler) UpdateProduct() fiber.Handler {
 		if _, err := fmt.Sscan(c.Params("id"), &id); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid id"})
 		}
-		if err := h.svc.UpdateProduct(c.Context(), id, ec.Product{
-			CategoryID:             in.CategoryID,
-			Name:                   in.Name,
-			ShortDescription:       in.ShortDescription,
-			LongDescription:        in.LongDescription,
-			BasePrice:              in.BasePrice,
-			BaseProductionTimeDays: in.BaseProductionTimeDays,
-			ImageURL:               in.ImageURL,
-		}); err != nil {
+	img := normalizeImageURL(in.ImageURL)
+	if err := h.svc.UpdateProduct(c.Context(), id, ec.Product{
+		CategoryID:             in.CategoryID,
+		Name:                   in.Name,
+		ShortDescription:       in.ShortDescription,
+		LongDescription:        in.LongDescription,
+		BasePrice:              in.BasePrice,
+		BaseProductionTimeDays: in.BaseProductionTimeDays,
+		ImageURL:               img,
+		DefaultWidth:           in.DefaultWidth,
+		DefaultHeight:          in.DefaultHeight,
+		DefaultDepth:           in.DefaultDepth,
+	}); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
 		}
 		return c.JSON(fiber.Map{"message": "updated"})

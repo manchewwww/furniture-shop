@@ -116,6 +116,9 @@ export default function AdminDashboard() {
       base_price: v.price,
       base_production_time_days: v.production_days ?? 0,
       image_url: v.image,
+      default_width: v.default_width,
+      default_height: v.default_height,
+      default_depth: v.default_depth,
     };
     if (editing) {
       await api.put(`/admin/products/${editing.id}`, payload);
@@ -470,6 +473,9 @@ export default function AdminDashboard() {
                         price: r.base_price,
                         production_days: r.base_production_time_days,
                         image: r.image_url,
+                        default_width: r.default_width,
+                        default_height: r.default_height,
+                        default_depth: r.default_depth,
                       });
                       api
                         .get(`/admin/product_options`, {
@@ -562,6 +568,43 @@ export default function AdminDashboard() {
               rules={[{ required: true }]}
             >
               <InputNumber min={0} step={0.01} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item label="Dimensions (cm)">
+              <div style={{ display: "flex", gap: 8 }}>
+                <Form.Item
+                  name="default_width"
+                  rules={[{ required: true }]}
+                  style={{ marginBottom: 0, flex: 1 }}
+                >
+                  <InputNumber
+                    min={1}
+                    placeholder="Width"
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="default_height"
+                  rules={[{ required: true }]}
+                  style={{ marginBottom: 0, flex: 1 }}
+                >
+                  <InputNumber
+                    min={1}
+                    placeholder="Height"
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+                <Form.Item
+                  name="default_depth"
+                  rules={[{ required: true }]}
+                  style={{ marginBottom: 0, flex: 1 }}
+                >
+                  <InputNumber
+                    min={1}
+                    placeholder="Depth"
+                    style={{ width: "100%" }}
+                  />
+                </Form.Item>
+              </div>
             </Form.Item>
             <Form.Item
               name="production_days"
