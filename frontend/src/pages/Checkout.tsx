@@ -15,22 +15,6 @@ import { useI18n } from "../store/I18nContext";
 
 type PaymentMethod = "card";
 
-function luhnValid(digits: string) {
-  let sum = 0;
-  let dbl = false;
-  for (let i = digits.length - 1; i >= 0; i--) {
-    let d = Number(digits[i]);
-    if (Number.isNaN(d)) return false;
-    if (dbl) {
-      d *= 2;
-      if (d > 9) d -= 9;
-    }
-    sum += d;
-    dbl = !dbl;
-  }
-  return sum % 10 === 0;
-}
-
 export default function Checkout() {
   const { items, clear } = useCart();
   const { t } = useI18n();
@@ -79,25 +63,6 @@ export default function Checkout() {
       message.error(t("checkout.error") || "Failed to create order");
     } finally {
       setPlacing(false);
-    }
-  };
-
-  const onPayCard = async (values: any) => {
-    if (!orderId) {
-      message.error(t("checkout.pay.no_order") || "No order to pay for");
-      return;
-    }
-    setPaying(true);
-    try {
-      await payByCard({ order_id: orderId, ...values });
-      message.success(t("checkout.pay.success") || "Payment successful");
-      clear();
-      cardForm.resetFields();
-      setOrderId(null);
-    } catch {
-      message.error(t("checkout.pay.error") || "Payment failed");
-    } finally {
-      setPaying(false);
     }
   };
 

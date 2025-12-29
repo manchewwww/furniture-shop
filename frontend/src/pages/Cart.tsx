@@ -60,8 +60,8 @@ export default function Cart() {
       <Typography.Title level={2}>{t("cart.title")}</Typography.Title>
       {items.length === 0 ? (
         <Empty description="Your cart is empty">
-          <Button type="primary">
-            <Link to="/catalog">Go to catalog</Link>
+          <Button type="primary" onClick={() => navigate("/catalog")}>
+            Go to catalog
           </Button>
         </Empty>
       ) : (
