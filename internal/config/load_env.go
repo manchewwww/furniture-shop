@@ -11,17 +11,22 @@ var Env EnvConfig
 
 func LoadEnvFile() error {
 	err := godotenv.Load(".env")
-	if err == nil {
-		return nil
-	}
-
-	if os.IsNotExist(err) {
-		return nil
+	if err != nil {
+		return fmt.Errorf("error loading .env file: %w", err)
 	}
 
 	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		return fmt.Errorf("JWT_SECRET is required")
+	}
 	dbUser := os.Getenv("DB_USER")
+	if dbUser == "" {
+		return fmt.Errorf("DB_USER is required")
+	}
 	dbPass := os.Getenv("DB_PASSWORD")
+	if dbPass == "" {
+		return fmt.Errorf("DB_PASSWORD is required")
+	}
 
 	Env = EnvConfig{
 		DBUser:    dbUser,
@@ -29,5 +34,5 @@ func LoadEnvFile() error {
 		JWTSecret: jwtSecret,
 	}
 
-	return fmt.Errorf("failed to load .env file: %w", err)
+	return nil
 }
