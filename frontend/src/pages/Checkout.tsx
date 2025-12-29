@@ -69,12 +69,12 @@ export default function Checkout() {
     setPlacing(true);
     try {
       const res = await createOrder(payload);
-      setOrderId(res.order_id);
-      setPaymentMethod(payload.payment_method);
       if (payload.payment_method === "card" && res.checkout_url) {
-        window.location.href = res.checkout_url as string;
+        window.location.assign(res.checkout_url as string);
         return;
       }
+      setOrderId(res.order_id);
+      setPaymentMethod(payload.payment_method);
     } catch {
       message.error(t("checkout.error") || "Failed to create order");
     } finally {

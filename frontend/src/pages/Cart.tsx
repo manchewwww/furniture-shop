@@ -1,5 +1,5 @@
 import { Button, Card, Empty, Row, Col, Space, Table, Typography } from "antd";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import { useI18n } from "../store/I18nContext";
 import { api } from "../api/client";
@@ -43,6 +43,7 @@ function itemProductionDays(
 export default function Cart() {
   const { items, remove, clear, increment, decrement } = useCart();
   const { t } = useI18n();
+  const navigate = useNavigate();
 
   const totals = items.map(
     (it) => unitPrice(it.product, it.options || []) * it.quantity
@@ -177,8 +178,12 @@ export default function Cart() {
                 <span>{etaDays || 0}</span>
               </div>
               <div style={{ marginTop: 12 }}>
-                <Button type="primary" block>
-                  <Link to="/checkout">{t("checkout.title")}</Link>
+                <Button
+                  type="primary"
+                  block
+                  onClick={() => navigate("/checkout")}
+                >
+                  {t("checkout.title")}
                 </Button>
                 <Button danger block style={{ marginTop: 8 }} onClick={clear}>
                   Clear Cart
