@@ -39,7 +39,7 @@ func (h *Handler) CreateOrder() fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
 		if err := vld.ValidateStruct(in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
+			return err
 		}
 		items := make([]service.CreateOrderItem, 0, len(in.Items))
 		for _, it := range in.Items {

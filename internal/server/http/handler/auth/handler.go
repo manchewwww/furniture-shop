@@ -33,7 +33,7 @@ func (h *Handler) Register() fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
 		if err := vld.ValidateStruct(in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
+			return err
 		}
 		user := eu.User{Role: "client", Name: in.Name, Email: in.Email, Address: in.Address, Phone: in.Phone}
 		if err := user.SetPassword(in.Password); err != nil {
@@ -63,7 +63,7 @@ func (h *Handler) Login() fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
 		if err := vld.ValidateStruct(in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
+			return err
 		}
 		user, err := h.svc.Authenticate(c.Context(), in.Email, in.Password)
 		if err != nil {

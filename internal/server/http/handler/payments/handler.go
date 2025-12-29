@@ -24,7 +24,7 @@ func (h *Handler) PayByCard() fiber.Handler {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
 		if err := vld.ValidateStruct(in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
+			return err
 		}
 		status, err := h.svc.PayByCard(c.Context(), in)
 		if err != nil {
