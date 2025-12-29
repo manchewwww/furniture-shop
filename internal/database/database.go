@@ -2,7 +2,6 @@ package database
 
 import (
 	"fmt"
-	"os"
 	"time"
 
 	"gorm.io/driver/postgres"
@@ -20,8 +19,8 @@ const databaseErrorPrefix = "DATABASE"
 var DB *gorm.DB
 
 func Connect() error {
-	user := os.Getenv("DB_USER")
-	password := os.Getenv("DB_PASSWORD")
+	user := config.Env.DBUser
+	password := config.Env.DBPass
 	if user == "" || password == "" {
 		return fmt.Errorf("%s: missing database credentials (DB_USER and DB_PASSWORD environment variables)", databaseErrorPrefix)
 	}
