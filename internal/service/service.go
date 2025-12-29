@@ -31,12 +31,12 @@ type CreateOrderInput struct {
 }
 
 type CardPayment struct {
-	OrderID     uint   `json:"order_id"`
-	Cardholder  string `json:"cardholder_name"`
-	CardNumber  string `json:"card_number"`
-	ExpiryMonth string `json:"expiry_month"`
-	ExpiryYear  string `json:"expiry_year"`
-	CVV         string `json:"cvv"`
+	OrderID     uint   `json:"order_id" validate:"required,gt=0"`
+	Cardholder  string `json:"cardholder_name" validate:"required,min=2"`
+	CardNumber  string `json:"card_number" validate:"required,card"`
+	ExpiryMonth string `json:"expiry_month" validate:"required,month"`
+	ExpiryYear  string `json:"expiry_year" validate:"required,numeric"`
+	CVV         string `json:"cvv" validate:"required,cvv"`
 }
 
 // Auth

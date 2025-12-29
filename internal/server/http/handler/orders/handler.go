@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 
 	"furniture-shop/internal/service"
+	vld "furniture-shop/internal/validation"
 )
 
 type Handler struct {
@@ -17,18 +18,18 @@ func NewOrdersHandler(svc service.OrdersService) *Handler {
 }
 
 type orderItemIn struct {
-	ProductID uint                     `json:"product_id"`
-	Quantity  int                      `json:"quantity"`
+	ProductID uint                     `json:"product_id" validate:"required,gt=0"`
+	Quantity  int                      `json:"quantity" validate:"required,gt=0"`
 	Options   []service.SelectedOption `json:"options"`
 }
 type createOrderDTO struct {
 	UserID        *uint         `json:"user_id"`
-	Name          string        `json:"name"`
-	Email         string        `json:"email"`
-	Address       string        `json:"address"`
-	Phone         string        `json:"phone"`
-	Items         []orderItemIn `json:"items"`
-	PaymentMethod string        `json:"payment_method"`
+	Name          string        `json:"name" validate:"required,min=2"`
+	Email         string        `json:"email" validate:"required,email"`
+	Address       string        `json:"address" validate:"required,min=5"`
+	Phone         string        `json:"phone" validate:"required,phone"`
+	Items         []orderItemIn `json:"items" validate:"required,min=1,dive"`
+	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card cod bank"`
 }
 
 func (h *Handler) CreateOrder() fiber.Handler {
@@ -36,6 +37,9 @@ func (h *Handler) CreateOrder() fiber.Handler {
 		var in createOrderDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
+		}
+		if err := vld.ValidateStruct(in); err != nil {
+			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
 		}
 		items := make([]service.CreateOrderItem, 0, len(in.Items))
 		for _, it := range in.Items {

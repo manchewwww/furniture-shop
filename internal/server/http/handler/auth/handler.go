@@ -7,6 +7,7 @@ import (
 
 	eu "furniture-shop/internal/entities/user"
 	"furniture-shop/internal/service"
+	vld "furniture-shop/internal/validation"
 )
 
 type Handler struct {
@@ -18,11 +19,11 @@ func NewAuthHandler(svc service.AuthService) *Handler {
 }
 
 type registerDTO struct {
-	Name     string `json:"name"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
-	Address  string `json:"address"`
-	Phone    string `json:"phone"`
+	Name     string `json:"name" validate:"required,min=2"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=6"`
+	Address  string `json:"address" validate:"omitempty,min=5"`
+	Phone    string `json:"phone" validate:"omitempty,phone"`
 }
 
 func (h *Handler) Register() fiber.Handler {
@@ -31,8 +32,8 @@ func (h *Handler) Register() fiber.Handler {
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
-		if in.Email == "" || in.Password == "" || in.Name == "" {
-			return c.Status(400).JSON(fiber.Map{"message": "name, email and password are required"})
+		if err := vld.ValidateStruct(in); err != nil {
+			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
 		}
 		user := eu.User{Role: "client", Name: in.Name, Email: in.Email, Address: in.Address, Phone: in.Phone}
 		if err := user.SetPassword(in.Password); err != nil {
@@ -51,8 +52,8 @@ func (h *Handler) createUser(ctx context.Context, u *eu.User) error {
 }
 
 type loginDTO struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required"`
 }
 
 func (h *Handler) Login() fiber.Handler {
@@ -60,6 +61,9 @@ func (h *Handler) Login() fiber.Handler {
 		var in loginDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
+		}
+		if err := vld.ValidateStruct(in); err != nil {
+			return c.Status(400).JSON(fiber.Map{"message": "invalid input", "errors": err.Error()})
 		}
 		user, err := h.svc.Authenticate(c.Context(), in.Email, in.Password)
 		if err != nil {
