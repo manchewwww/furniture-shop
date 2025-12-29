@@ -76,11 +76,9 @@ func (h *Handler) StripeWebhook() fiber.Handler {
 
 		switch evt.Type {
 		case "checkout.session.completed", "payment_intent.succeeded", "checkout.session.async_payment_succeeded":
-			_ = h.svc.UpdatePaymentStatus(c.Context(), oid, "paid")
-			_ = h.orders.AdminUpdateOrderStatus(c.Context(), oid, "processing")
+			_ = h.svc.ProcessPaymentResult(c.Context(), oid, true)
 		case "payment_intent.payment_failed", "checkout.session.async_payment_failed", "checkout.session.expired":
-			_ = h.svc.UpdatePaymentStatus(c.Context(), oid, "declined")
-			_ = h.orders.AdminUpdateOrderStatus(c.Context(), oid, "cancelled")
+			_ = h.svc.ProcessPaymentResult(c.Context(), oid, false)
 		}
 		return c.SendStatus(200)
 	}

@@ -30,16 +30,9 @@ func (s *paymentService) PayByCard(ctx context.Context, in service.CardPayment) 
 		return eo.PaymentStatusDeclined, errors.New("invalid cardholder")
 	}
 
-	// Validate expiry month and year format and ranges
 	if !reDigits.MatchString(in.ExpiryMonth) || !reDigits.MatchString(in.ExpiryYear) {
 		return eo.PaymentStatusDeclined, errors.New("invalid expiry")
 	}
-
-	// Note: This is a simplified validation. In production, this should:
-	// 1. Validate expiry month is between 1-12
-	// 2. Check if the card has expired
-	// 3. Integrate with a real payment gateway for actual validation and processing
-	// For now, we perform basic format validation only
 
 	if err := s.orders.UpdatePaymentStatus(ctx, in.OrderID, eo.PaymentStatusPaid); err != nil {
 		return eo.PaymentStatusDeclined, err
@@ -47,6 +40,15 @@ func (s *paymentService) PayByCard(ctx context.Context, in service.CardPayment) 
 	return eo.PaymentStatusPaid, nil
 }
 
-func (s *paymentService) UpdatePaymentStatus(ctx context.Context, orderID uint, status string) error {
-	return s.orders.UpdatePaymentStatus(ctx, orderID, status)
+func (s *paymentService) ProcessPaymentResult(ctx context.Context, orderID uint, success bool) error {
+	if success {
+		if err := s.orders.UpdatePaymentStatus(ctx, orderID, eo.PaymentStatusPaid); err != nil {
+			return err
+		}
+		return s.orders.UpdateStatus(ctx, orderID, eo.OrderStatusProcessing)
+	}
+	if err := s.orders.UpdatePaymentStatus(ctx, orderID, eo.PaymentStatusDeclined); err != nil {
+		return err
+	}
+	return s.orders.UpdateStatus(ctx, orderID, eo.OrderStatusCancelled)
 }
