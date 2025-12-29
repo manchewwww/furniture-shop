@@ -13,6 +13,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useI18n } from "../store/I18nContext";
 import { useNavigate } from "react-router-dom";
+import AdminNav from "../components/AdminNav";
 
 export default function AdminCategories() {
   const { t } = useI18n();
@@ -49,20 +50,7 @@ export default function AdminCategories() {
 
   return (
     <div>
-      <Card style={{ marginBottom: 16 }}>
-        <Button type="link" onClick={() => nav("/admin/departments")}>
-          Departments
-        </Button>
-        <Button type="link" onClick={() => nav("/admin/categories")}>
-          Categories
-        </Button>
-        <Button type="link" onClick={() => nav("/admin/products")}>
-          Products
-        </Button>
-        <Button type="link" onClick={() => nav("/admin/orders")}>
-          Orders
-        </Button>
-      </Card>
+      <AdminNav />
       <Card
         title="Categories"
         extra={
