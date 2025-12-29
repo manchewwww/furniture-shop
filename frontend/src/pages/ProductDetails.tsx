@@ -33,7 +33,15 @@ export default function ProductDetails() {
   return (
     <div>
       <Row gutter={24}>
-        <Col md={10} xs={24}>
+        <Col
+          md={12}
+          xs={24}
+          style={{
+            borderRight: "1px solid #f0f0f0",
+            paddingRight: 16,
+            marginBottom: 16,
+          }}
+        >
           {(() => {
             const origin = (() => {
               try {
@@ -60,7 +68,7 @@ export default function ProductDetails() {
             );
           })()}
         </Col>
-        <Col md={14} xs={24}>
+        <Col md={12} xs={24} style={{ paddingLeft: 16 }}>
           <Typography.Title level={3}>{product.name}</Typography.Title>
           <p>{product.long_description}</p>
           <p>
