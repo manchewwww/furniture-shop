@@ -46,3 +46,7 @@ func (s *paymentService) PayByCard(ctx context.Context, in service.CardPayment) 
 	}
 	return eo.PaymentStatusPaid, nil
 }
+
+func (s *paymentService) UpdatePaymentStatus(ctx context.Context, orderID uint, status string) error {
+	return s.orders.UpdatePaymentStatus(ctx, orderID, status)
+}

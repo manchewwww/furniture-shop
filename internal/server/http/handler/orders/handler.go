@@ -2,6 +2,7 @@ package orders
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 
@@ -57,11 +58,46 @@ func (h *Handler) CreateOrder() fiber.Handler {
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": err.Error()})
 		}
-		return c.JSON(fiber.Map{
-			"order_id": order.ID, "total_price": order.TotalPrice,
-			"estimated_production_time_days": order.EstimatedProductionTimeDays,
-			"status":                         order.Status, "payment_status": order.PaymentStatus,
-		})
+		switch in.PaymentMethod {
+		case "bank":
+			ref := fmt.Sprintf("FSH-%d", order.ID)
+			instructions := fiber.Map{
+				"beneficiary_name":  "Furniture Shop Demo",
+				"iban":              "BG00UNCR70001512345678",
+				"bic":               "UNCRBGSF",
+				"bank_name":         "UniCredit Bulbank (TEST)",
+				"amount":            order.TotalPrice,
+				"currency":          "EUR",
+				"payment_reference": ref,
+				"reason_line":       fmt.Sprintf("Order #%d - %s", order.ID, ref),
+			}
+			return c.JSON(fiber.Map{
+				"order_id":                       order.ID,
+				"total_price":                    order.TotalPrice,
+				"estimated_production_time_days": order.EstimatedProductionTimeDays,
+				"status":                         order.Status,
+				"payment_status":                 order.PaymentStatus,
+				"instructions":                   instructions,
+			})
+		case "card":
+			checkoutURL := os.Getenv("STRIPE_DEMO_CHECKOUT_URL")
+			if checkoutURL == "" {
+				fe := os.Getenv("FRONTEND_URL")
+				if fe == "" {
+					fe = "http://localhost:5173"
+				}
+				checkoutURL = fmt.Sprintf("%s/payment/success?order_id=%d", fe, order.ID)
+			}
+			return c.JSON(fiber.Map{"order_id": order.ID, "checkout_url": checkoutURL})
+		case "cod":
+			fallthrough
+		default:
+			return c.JSON(fiber.Map{
+				"order_id": order.ID, "total_price": order.TotalPrice,
+				"estimated_production_time_days": order.EstimatedProductionTimeDays,
+				"status":                         order.Status, "payment_status": order.PaymentStatus,
+			})
+		}
 	}
 }
 

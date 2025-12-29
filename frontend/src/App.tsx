@@ -8,6 +8,8 @@ import Checkout from "./pages/Checkout";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Orders from "./pages/Orders";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 import AdminLayout from "./components/AdminLayout";
 import AdminDepartments from "./pages/AdminDepartments";
 import AdminCategories from "./pages/AdminCategories";
@@ -103,6 +105,8 @@ export default function App() {
                 </RequireAuth>
               }
             />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/payment/cancel" element={<PaymentCancel />} />
             <Route
               path="/login"
               element={

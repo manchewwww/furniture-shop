@@ -4,4 +4,5 @@ import "github.com/gofiber/fiber/v2"
 
 func Register(api fiber.Router, h *Handler) {
 	api.Post("/payments/card", h.PayByCard())
+	api.Post("/webhooks/stripe", h.StripeWebhook())
 }
