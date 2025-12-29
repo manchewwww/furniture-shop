@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   Button,
@@ -31,98 +31,30 @@ function luhnValid(digits: string) {
   return sum % 10 === 0;
 }
 
-function onlyDigits(value: unknown) {
-  return String(value ?? "").replace(/\s+/g, "");
-}
-
 export default function Checkout() {
   const { items, clear } = useCart();
   const { t } = useI18n();
-
   const [orderId, setOrderId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [placing, setPlacing] = useState(false);
   const [paying, setPaying] = useState(false);
-
+  const [bankInfo, setBankInfo] = useState<any | null>(null);
   const [orderForm] = Form.useForm();
   const [cardForm] = Form.useForm();
 
-  const rules = useMemo(() => {
-    const requiredTrim = (msg: string) => ({
-      required: true,
-      validator: async (_: any, v: any) => {
-        const s = String(v ?? "").trim();
-        if (!s) throw new Error(msg);
-      },
-    });
+  const requiredTrim = (msg: string) => ({
+    required: true,
+    validator: async (_: any, v: any) => {
+      const s = String(v ?? "").trim();
+      if (!s) throw new Error(msg);
+    },
+  });
 
-    const minTrim = (min: number, msg: string) => ({
-      validator: async (_: any, v: any) => {
-        const s = String(v ?? "").trim();
-        if (s.length < min) throw new Error(msg);
-      },
-    });
-
-    const emailRule = () => ({
-      type: "email" as const,
-      message: "Enter a valid email",
-    });
-
-    const phoneRule = () => ({
-      pattern: /^[0-9+\-()\s]{7,20}$/,
-      message: "Enter a valid phone number",
-    });
-
-    const cardNumberRule = () => ({
-      validator: async (_: any, v: any) => {
-        const digits = onlyDigits(v);
-        if (!/^\d{13,19}$/.test(digits)) throw new Error("Invalid card number");
-        if (!luhnValid(digits)) throw new Error("Invalid card number");
-      },
-    });
-
-    const monthRule = () => ({
-      validator: async (_: any, v: any) => {
-        const m = Number(v);
-        if (!Number.isInteger(m) || m < 1 || m > 12)
-          throw new Error("Invalid month");
-      },
-    });
-
-    const yearRule = () => ({
-      validator: async (_: any, v: any) => {
-        const now = new Date();
-        const raw = String(v ?? "").trim();
-        let y = Number(raw);
-        if (!Number.isInteger(y)) throw new Error("Invalid year");
-        if (raw.length === 2) y += 2000;
-
-        const m = Number(cardForm.getFieldValue("expiry_month")) || 1; // 1..12
-        const expEnd = new Date(y, m, 0); // last day of month
-        if (expEnd < now) throw new Error("Card expired");
-      },
-    });
-
-    const cvvRule = () => ({ pattern: /^\d{3,4}$/, message: "3-4 digits" });
-
-    return {
-      requiredTrim,
-      minTrim,
-      emailRule,
-      phoneRule,
-      cardNumberRule,
-      monthRule,
-      yearRule,
-      cvvRule,
-    };
-  }, [cardForm]);
-
-  const onFinishOrder = async (values: any) => {
+  const onPlaceOrder = async (values: any) => {
     if (!items.length) {
       message.error(t("checkout.empty_cart") || "Your cart is empty.");
       return;
     }
-
     const payload = {
       name: String(values.name).trim(),
       email: String(values.email).trim(),
@@ -135,17 +67,17 @@ export default function Checkout() {
         options: it.options,
       })),
     };
-
     setPlacing(true);
     try {
       const res = await createOrder(payload);
       setOrderId(res.order_id);
       setPaymentMethod(payload.payment_method);
-      message.success(t("checkout.success") || "Order created successfully");
-
-      if (payload.payment_method !== "card") {
-        clear();
-        orderForm.resetFields();
+      if (payload.payment_method === "card" && res.checkout_url) {
+        window.location.href = res.checkout_url as string;
+        return;
+      }
+      if (payload.payment_method === "bank" && res.instructions) {
+        setBankInfo(res.instructions);
       }
     } catch {
       message.error(t("checkout.error") || "Failed to create order");
@@ -154,29 +86,18 @@ export default function Checkout() {
     }
   };
 
-  const onFinishCard = async (values: any) => {
+  const onPayCard = async (values: any) => {
     if (!orderId) {
       message.error(t("checkout.pay.no_order") || "No order to pay for");
       return;
     }
-
     setPaying(true);
     try {
-      await payByCard({
-        order_id: orderId,
-        cardholder_name: String(values.cardholder_name).trim(),
-        card_number: onlyDigits(values.card_number),
-        expiry_month: String(values.expiry_month).trim(),
-        expiry_year: String(values.expiry_year).trim(),
-        cvv: String(values.cvv).trim(),
-      });
-
+      await payByCard({ order_id: orderId, ...values });
       message.success(t("checkout.pay.success") || "Payment successful");
       clear();
-      orderForm.resetFields();
       cardForm.resetFields();
       setOrderId(null);
-      setPaymentMethod("card");
     } catch {
       message.error(t("checkout.pay.error") || "Payment failed");
     } finally {
@@ -193,54 +114,52 @@ export default function Checkout() {
           <Form
             form={orderForm}
             layout="vertical"
-            initialValues={{ payment_method: "card" as PaymentMethod }}
-            onFinish={onFinishOrder}
-            validateTrigger={["onBlur", "onSubmit"]}
+            onFinish={onPlaceOrder}
+            initialValues={{ payment_method: "card" }}
           >
             <Form.Item
               name="name"
               label={t("checkout.name")}
               rules={[
-                rules.requiredTrim("Name is required"),
-                rules.minTrim(2, "Name must be at least 2 characters"),
+                requiredTrim("Name is required"),
+                { min: 2, message: "Name must be at least 2 characters" },
               ]}
             >
               <Input autoComplete="name" />
             </Form.Item>
-
             <Form.Item
               name="email"
               label={t("checkout.email")}
               rules={[
-                rules.requiredTrim("Email is required"),
-                rules.emailRule(),
+                { required: true, message: "Email is required" },
+                { type: "email", message: "Enter a valid email" },
               ]}
             >
               <Input autoComplete="email" />
             </Form.Item>
-
             <Form.Item
               name="phone"
               label={t("checkout.phone")}
               rules={[
-                rules.requiredTrim("Phone is required"),
-                rules.phoneRule(),
+                { required: true, message: "Phone is required" },
+                {
+                  pattern: /^[0-9+\-()\s]{7,20}$/,
+                  message: "Enter a valid phone number",
+                },
               ]}
             >
               <Input autoComplete="tel" />
             </Form.Item>
-
             <Form.Item
               name="address"
               label={t("checkout.address")}
               rules={[
-                rules.requiredTrim("Address is required"),
-                rules.minTrim(5, "Address must be at least 5 characters"),
+                requiredTrim("Address is required"),
+                { min: 5, message: "Address must be at least 5 characters" },
               ]}
             >
               <Input autoComplete="street-address" />
             </Form.Item>
-
             <Form.Item
               name="payment_method"
               label={t("checkout.payment_method")}
@@ -259,7 +178,6 @@ export default function Checkout() {
                 ]}
               />
             </Form.Item>
-
             <Button
               type="primary"
               htmlType="submit"
@@ -272,12 +190,37 @@ export default function Checkout() {
         </Card>
       )}
 
-      {orderId && paymentMethod !== "card" && (
-        <Alert
-          type="success"
-          showIcon
-          message={t("checkout.success") || "Order created successfully."}
-        />
+      {orderId && paymentMethod === "bank" && bankInfo && (
+        <Card title={t("checkout.payment.bank") || "Bank Transfer"}>
+          <Alert
+            type="success"
+            showIcon
+            style={{ marginBottom: 12 }}
+            message={t("checkout.success") || "Order created successfully."}
+          />
+          <Typography.Paragraph>
+            <b>{t("orders.col.total") || "Total"}:</b> {bankInfo.amount}{" "}
+            {bankInfo.currency}
+          </Typography.Paragraph>
+          <Typography.Paragraph>
+            <b>Beneficiary:</b> {bankInfo.beneficiary_name}
+            <br />
+            <b>Bank:</b> {bankInfo.bank_name}
+            <br />
+            <b>IBAN:</b> {bankInfo.iban}
+            <br />
+            <b>BIC:</b> {bankInfo.bic}
+          </Typography.Paragraph>
+          <Alert
+            type="info"
+            showIcon
+            message={
+              (t("checkout.noncard.instructions") ||
+                "Use this reference in the transfer:") +
+              ` ${bankInfo.payment_reference}`
+            }
+          />
+        </Card>
       )}
 
       {orderId && paymentMethod === "card" && (
@@ -291,39 +234,46 @@ export default function Checkout() {
               "Order created. Please enter your card details to pay."
             }
           />
-
-          <Form
-            form={cardForm}
-            layout="vertical"
-            onFinish={onFinishCard}
-            validateTrigger={["onBlur", "onSubmit"]}
-          >
+          <Form form={cardForm} layout="vertical" onFinish={onPayCard}>
             <Form.Item
               name="cardholder_name"
               label={t("checkout.cardholder_name")}
               rules={[
-                rules.requiredTrim("Cardholder is required"),
-                rules.minTrim(2, "Cardholder must be at least 2 characters"),
+                requiredTrim("Cardholder is required"),
+                { min: 2, message: "Cardholder must be at least 2 characters" },
               ]}
             >
               <Input autoComplete="cc-name" />
             </Form.Item>
-
             <Form.Item
               name="card_number"
               label={t("checkout.card_number")}
               rules={[
-                rules.requiredTrim("Card number is required"),
-                rules.cardNumberRule(),
+                { required: true, message: "Card number is required" },
+                {
+                  validator: async (_: any, v: string) => {
+                    const d = String(v || "").replace(/\s+/g, "");
+                    if (!/^\d{13,19}$/.test(d) || !luhnValid(d))
+                      throw new Error("Invalid card number");
+                  },
+                },
               ]}
             >
               <Input autoComplete="cc-number" inputMode="numeric" />
             </Form.Item>
-
             <Form.Item
               name="expiry_month"
               label={t("checkout.exp_month")}
-              rules={[rules.requiredTrim("Month required"), rules.monthRule()]}
+              rules={[
+                { required: true, message: "Month required" },
+                {
+                  validator: async (_: any, v: string) => {
+                    const m = Number(v);
+                    if (!Number.isInteger(m) || m < 1 || m > 12)
+                      throw new Error("Invalid month");
+                  },
+                },
+              ]}
             >
               <Input
                 autoComplete="cc-exp-month"
@@ -331,12 +281,24 @@ export default function Checkout() {
                 placeholder="MM"
               />
             </Form.Item>
-
             <Form.Item
               name="expiry_year"
               label={t("checkout.exp_year")}
               dependencies={["expiry_month"]}
-              rules={[rules.requiredTrim("Year required"), rules.yearRule()]}
+              rules={[
+                { required: true, message: "Year required" },
+                {
+                  validator: async ({ getFieldValue }: any, v: string) => {
+                    const now = new Date();
+                    let y = Number(v);
+                    if (!Number.isInteger(y)) throw new Error("Invalid year");
+                    if ((v || "").length === 2) y += 2000;
+                    const m = Number(getFieldValue("expiry_month")) || 1;
+                    if (new Date(y, m, 0) < now)
+                      throw new Error("Card expired");
+                  },
+                },
+              ]}
             >
               <Input
                 autoComplete="cc-exp-year"
@@ -344,15 +306,16 @@ export default function Checkout() {
                 placeholder="YY or YYYY"
               />
             </Form.Item>
-
             <Form.Item
               name="cvv"
               label="CVV"
-              rules={[rules.requiredTrim("CVV required"), rules.cvvRule()]}
+              rules={[
+                { required: true, message: "CVV required" },
+                { pattern: /^\d{3,4}$/, message: "3-4 digits" },
+              ]}
             >
               <Input.Password autoComplete="cc-csc" inputMode="numeric" />
             </Form.Item>
-
             <Button type="primary" htmlType="submit" loading={paying}>
               {t("checkout.pay") || "Pay"}
             </Button>

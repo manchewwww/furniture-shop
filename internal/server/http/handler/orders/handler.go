@@ -89,8 +89,6 @@ func (h *Handler) CreateOrder() fiber.Handler {
 				checkoutURL = fmt.Sprintf("%s/payment/success?order_id=%d", fe, order.ID)
 			}
 			return c.JSON(fiber.Map{"order_id": order.ID, "checkout_url": checkoutURL})
-		case "cod":
-			fallthrough
 		default:
 			return c.JSON(fiber.Map{
 				"order_id": order.ID, "total_price": order.TotalPrice,
