@@ -7,6 +7,7 @@ import {
 } from "../api/catalog";
 import { Link, useSearchParams } from "react-router-dom";
 import { useI18n } from "../store/I18nContext";
+import { api } from "../api/client";
 
 export default function Catalog() {
   const [depts, setDepts] = useState<any[]>([]);
@@ -65,14 +66,27 @@ export default function Catalog() {
         </Row>
       )}
       <Row gutter={[16, 16]}>
-        {products.map((p) => (
-          <Col key={p.id} xs={24} sm={12} md={8}>
-            <Card title={p.name} cover={<img src={p.image_url} alt={p.name} />}>
-              <p>{p.short_description}</p>
-              <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
-            </Card>
-          </Col>
-        ))}
+        {products.map((p) => {
+          const origin = (() => {
+            try {
+              return new URL(api.defaults.baseURL as string).origin;
+            } catch {
+              return "";
+            }
+          })();
+          const img =
+            p.image_url && !/^https?:/i.test(p.image_url)
+              ? origin + p.image_url
+              : p.image_url;
+          return (
+            <Col key={p.id} xs={24} sm={12} md={8}>
+              <Card title={p.name} cover={<img src={img} alt={p.name} />}>
+                <p>{p.short_description}</p>
+                <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
+              </Card>
+            </Col>
+          );
+        })}
       </Row>
     </div>
   );

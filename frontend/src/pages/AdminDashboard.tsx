@@ -238,7 +238,15 @@ export default function AdminDashboard() {
                               },
                             }
                           );
-                          deptForm.setFieldsValue({ image_url: res.data.url });
+                          const base = (api.defaults.baseURL as string) || "";
+                          let origin = "";
+                          try {
+                            origin = new URL(base).origin;
+                          } catch {}
+                          const finalUrl = /^https?:/i.test(res.data.url)
+                            ? res.data.url
+                            : origin + res.data.url;
+                          deptForm.setFieldsValue({ image_url: finalUrl });
                           message.success(t("upload_success"));
                           opts.onSuccess?.(res.data);
                         } catch (e) {
@@ -426,14 +434,21 @@ export default function AdminDashboard() {
             {
               title: t("product_image"),
               dataIndex: "image_url",
-              render: (u: string) =>
-                u ? (
+              render: (u: string) => {
+                if (!u) return null;
+                let origin = "";
+                try {
+                  origin = new URL(api.defaults.baseURL as string).origin;
+                } catch {}
+                const url = /^https?:/i.test(u) ? u : origin + u;
+                return (
                   <img
-                    src={u}
+                    src={url}
                     alt=""
                     style={{ width: 60, height: 40, objectFit: "cover" }}
                   />
-                ) : null,
+                );
+              },
             },
             {
               title: t("actions"),
@@ -583,7 +598,15 @@ export default function AdminDashboard() {
                   const res = await api.post("/admin/upload", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                   });
-                  productForm.setFieldsValue({ image: res.data.url });
+                  const base = (api.defaults.baseURL as string) || "";
+                  let origin = "";
+                  try {
+                    origin = new URL(base).origin;
+                  } catch {}
+                  const finalUrl = /^https?:/i.test(res.data.url)
+                    ? res.data.url
+                    : origin + res.data.url;
+                  productForm.setFieldsValue({ image: finalUrl });
                   message.success(t("upload_success"));
                   opts.onSuccess?.(res.data);
                 } catch (e) {

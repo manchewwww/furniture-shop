@@ -95,7 +95,15 @@ export default function AdminDepartments() {
                   const res = await api.post("/admin/upload", formData, {
                     headers: { "Content-Type": "multipart/form-data" },
                   });
-                  deptForm.setFieldsValue({ image_url: res.data.url });
+                  const base = (api.defaults.baseURL as string) || "";
+                  let origin = "";
+                  try {
+                    origin = new URL(base).origin;
+                  } catch {}
+                  const finalUrl = /^https?:/i.test(res.data.url)
+                    ? res.data.url
+                    : origin + res.data.url;
+                  deptForm.setFieldsValue({ image_url: finalUrl });
                   message.success(t("upload_success"));
                   opts.onSuccess?.(res.data);
                 } catch (e) {

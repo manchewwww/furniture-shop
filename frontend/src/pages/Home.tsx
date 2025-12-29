@@ -2,6 +2,7 @@ import { Card, Col, Row, Typography } from "antd";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchDepartments } from "../api/catalog";
+import { api } from "../api/client";
 import { useI18n } from "../store/I18nContext";
 
 export default function Home() {
@@ -24,9 +25,22 @@ export default function Home() {
                 hoverable
                 title={d.name}
                 cover={
-                  d.image_url ? (
-                    <img src={d.image_url} alt={d.name} />
-                  ) : undefined
+                  d.image_url
+                    ? (() => {
+                        const origin = (() => {
+                          try {
+                            return new URL(api.defaults.baseURL as string)
+                              .origin;
+                          } catch {
+                            return "";
+                          }
+                        })();
+                        const img = !/^https?:/i.test(d.image_url)
+                          ? origin + d.image_url
+                          : d.image_url;
+                        return <img src={img} alt={d.name} />;
+                      })()
+                    : undefined
                 }
               >
                 <p>{d.description}</p>

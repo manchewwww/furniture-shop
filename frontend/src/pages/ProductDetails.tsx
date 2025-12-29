@@ -13,6 +13,7 @@ import { useParams } from "react-router-dom";
 import { fetchProduct, fetchRecommendations } from "../api/catalog";
 import { useCart } from "../store/CartContext";
 import { useI18n } from "../store/I18nContext";
+import { api } from "../api/client";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -33,11 +34,22 @@ export default function ProductDetails() {
     <div>
       <Row gutter={24}>
         <Col md={14} xs={24}>
-          <img
-            src={product.image_url}
-            alt={product.name}
-            style={{ maxWidth: "100%" }}
-          />
+          {(() => {
+            const origin = (() => {
+              try {
+                return new URL(api.defaults.baseURL as string).origin;
+              } catch {
+                return "";
+              }
+            })();
+            const img =
+              product.image_url && !/^https?:/i.test(product.image_url)
+                ? origin + product.image_url
+                : product.image_url;
+            return (
+              <img src={img} alt={product.name} style={{ maxWidth: "100%" }} />
+            );
+          })()}
           <Typography.Title level={3}>{product.name}</Typography.Title>
           <p>{product.long_description}</p>
           <p>
