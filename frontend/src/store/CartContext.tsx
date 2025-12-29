@@ -1,44 +1,78 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 
 export type CartItem = {
-  product: any
-  quantity: number
-  options: { id: number; type: string }[]
-}
+  product: any;
+  quantity: number;
+  options: { id: number; type: string }[];
+};
 
 type CartCtxType = {
-  items: CartItem[]
-  add: (item: CartItem) => void
-  remove: (productId: number) => void
-  clear: () => void
-}
+  items: CartItem[];
+  add: (item: CartItem) => void;
+  remove: (productId: number) => void;
+  increment: (productId: number) => void;
+  decrement: (productId: number) => void;
+  clear: () => void;
+};
 
-const CartCtx = createContext<CartCtxType | undefined>(undefined)
+const CartCtx = createContext<CartCtxType | undefined>(undefined);
 
-export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [items, setItems] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('cart')
-    return saved ? JSON.parse(saved) : []
-  })
-  useEffect(() => { localStorage.setItem('cart', JSON.stringify(items)) }, [items])
-  const value = useMemo(() => ({
-    items,
-    add: (item: CartItem) => setItems(prev => {
-      const existing = prev.find(p => p.product.id === item.product.id)
-      if (existing) {
-        return prev.map(p => p.product.id === item.product.id ? { ...p, quantity: p.quantity + item.quantity } : p)
-      }
-      return [...prev, item]
+    const saved = localStorage.getItem("cart");
+    return saved ? JSON.parse(saved) : [];
+  });
+  useEffect(() => {
+    localStorage.setItem("cart", JSON.stringify(items));
+  }, [items]);
+  const value = useMemo(
+    () => ({
+      items,
+      add: (item: CartItem) =>
+        setItems((prev) => {
+          const existing = prev.find((p) => p.product.id === item.product.id);
+          if (existing) {
+            return prev.map((p) =>
+              p.product.id === item.product.id
+                ? { ...p, quantity: p.quantity + item.quantity }
+                : p
+            );
+          }
+          return [...prev, item];
+        }),
+      remove: (id: number) =>
+        setItems((prev) => prev.filter((p) => p.product.id !== id)),
+      increment: (id: number) =>
+        setItems((prev) =>
+          prev.map((p) =>
+            p.product.id === id ? { ...p, quantity: p.quantity + 1 } : p
+          )
+        ),
+      decrement: (id: number) =>
+        setItems((prev) =>
+          prev.flatMap((p) => {
+            if (p.product.id !== id) return [p];
+            const nextQty = p.quantity - 1;
+            return nextQty <= 0 ? [] : [{ ...p, quantity: nextQty }];
+          })
+        ),
+      clear: () => setItems([]),
     }),
-    remove: (id: number) => setItems(prev => prev.filter(p => p.product.id !== id)),
-    clear: () => setItems([])
-  }), [items])
-  return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>
-}
+    [items]
+  );
+  return <CartCtx.Provider value={value}>{children}</CartCtx.Provider>;
+};
 
 export const useCart = () => {
-  const ctx = useContext(CartCtx)
-  if (!ctx) throw new Error('CartProvider is missing')
-  return ctx
-}
-
+  const ctx = useContext(CartCtx);
+  if (!ctx) throw new Error("CartProvider is missing");
+  return ctx;
+};
