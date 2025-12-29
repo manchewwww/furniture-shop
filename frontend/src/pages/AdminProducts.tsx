@@ -206,6 +206,17 @@ export default function AdminProducts() {
                     onClick={() => {
                       setEditing(r);
                       setOpenProduct(true);
+                      const origin = (() => {
+                        try {
+                          return new URL(api.defaults.baseURL as string).origin;
+                        } catch {
+                          return "";
+                        }
+                      })();
+                      const imageVal =
+                        r.image_url && !/^https?:/i.test(r.image_url)
+                          ? origin + r.image_url
+                          : r.image_url;
                       productForm.setFieldsValue({
                         department_id: categories.find(
                           (c: any) => c.id === r.category_id
@@ -215,7 +226,7 @@ export default function AdminProducts() {
                         description: r.short_description || r.long_description,
                         price: r.base_price,
                         production_days: r.base_production_time_days,
-                        image: r.image_url,
+                        image: imageVal,
                         default_width: r.default_width,
                         default_height: r.default_height,
                         default_depth: r.default_depth,
