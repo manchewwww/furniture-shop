@@ -161,6 +161,51 @@ func (h *Handler) AdminListOrders() fiber.Handler {
 	}
 }
 
+func (h *Handler) PayExistingOrder() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		uid, ok := c.Locals("user_id").(uint)
+		if !ok {
+			return c.Status(401).JSON(fiber.Map{"message": "unauthorized"})
+		}
+		var id uint
+		if _, err := fmt.Sscan(c.Params("id"), &id); err != nil {
+			return c.Status(400).JSON(fiber.Map{"message": "invalid id"})
+		}
+		order, err := h.svc.GetUserOrder(c.Context(), uid, id)
+		if err != nil {
+			return c.Status(404).JSON(fiber.Map{"message": "not found"})
+		}
+
+		fe := "http://localhost:5173"
+		stripe.Key = config.Env.StripeSecretKey
+		amount := int64(math.Round(order.TotalPrice * 100))
+		params := &stripe.CheckoutSessionParams{
+			Mode:       stripe.String(string(stripe.CheckoutSessionModePayment)),
+			SuccessURL: stripe.String(fmt.Sprintf("%s/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=%d", fe, order.ID)),
+			CancelURL:  stripe.String(fmt.Sprintf("%s/payment/cancel?order_id=%d", fe, order.ID)),
+			Metadata:   map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+			PaymentIntentData: &stripe.CheckoutSessionPaymentIntentDataParams{
+				Metadata: map[string]string{"order_id": strconv.Itoa(int(order.ID))},
+			},
+			LineItems: []*stripe.CheckoutSessionLineItemParams{{
+				PriceData: &stripe.CheckoutSessionLineItemPriceDataParams{
+					Currency: stripe.String("eur"),
+					ProductData: &stripe.CheckoutSessionLineItemPriceDataProductDataParams{
+						Name: stripe.String(fmt.Sprintf("Order #%d", order.ID)),
+					},
+					UnitAmount: stripe.Int64(amount),
+				},
+				Quantity: stripe.Int64(1),
+			}},
+		}
+		sess, err := session.New(params)
+		if err != nil {
+			return c.Status(500).JSON(fiber.Map{"message": "stripe error"})
+		}
+		return c.JSON(fiber.Map{"checkout_url": sess.URL})
+	}
+}
+
 type patchStatusDTO struct {
 	Status string `json:"status"`
 }

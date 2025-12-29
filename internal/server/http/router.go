@@ -19,7 +19,7 @@ func buildRoutes(s *Server) {
 	catalogH := hc.NewCatalogHandler(s.svc.Catalog)
 	ordersH := ho.NewOrdersHandler(s.svc.Orders)
 	adminH := ha.NewAdminHandler(s.svc.Admin)
-	paymentsH := hp.NewPaymentsHandler(s.svc.Payment)
+	paymentsH := hp.NewPaymentsHandler(s.svc.Payment, s.svc.Orders)
 
 	// Auth
 	hau.Register(api, authH)
@@ -36,6 +36,7 @@ func buildRoutes(s *Server) {
 	authGroup.Get("/me", authH.Me())
 	authGroup.Get("/orders", ordersH.UserOrders())
 	authGroup.Get("/orders/:id", ordersH.UserOrderDetails())
+	authGroup.Post("/orders/:id/pay", ordersH.PayExistingOrder())
 
 	// Admin routes
 	adminGroup := api.Group("/admin", middleware.JWTAuth(), middleware.RequireAdmin)

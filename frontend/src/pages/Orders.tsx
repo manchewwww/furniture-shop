@@ -1,6 +1,6 @@
-import { Table, Tag, Typography, message } from "antd";
+import { Button, Table, Tag, Typography, message } from "antd";
 import { useEffect, useState } from "react";
-import { myOrders } from "../api/orders";
+import { myOrders, payOrder } from "../api/orders";
 import { useI18n } from "../store/I18nContext";
 
 export default function Orders() {
@@ -32,6 +32,30 @@ export default function Orders() {
           {
             title: t("orders.col.eta_days"),
             dataIndex: "estimated_production_time_days",
+          },
+          {
+            title: "Actions",
+            render: (_: any, row: any) => {
+              const canPay = row.payment_status === "declined";
+              return (
+                <Button
+                  size="small"
+                  type="primary"
+                  disabled={!canPay}
+                  onClick={async () => {
+                    try {
+                      const res = await payOrder(row.id);
+                      if (res?.checkout_url)
+                        window.location.href = res.checkout_url;
+                    } catch {
+                      message.error("Unable to start payment");
+                    }
+                  }}
+                >
+                  Re-pay
+                </Button>
+              );
+            },
           },
         ]}
       />
