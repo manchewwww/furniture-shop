@@ -78,7 +78,19 @@ export default function Catalog() {
                 <Card
                   hoverable
                   title={d.name}
-                  cover={img ? <img src={img} alt={d.name} /> : undefined}
+                  cover={
+                    img ? (
+                      <img
+                        src={img}
+                        alt={d.name}
+                        style={{
+                          width: "100%",
+                          height: 220,
+                          objectFit: "cover",
+                        }}
+                      />
+                    ) : undefined
+                  }
                   onClick={() => {
                     setDeptId(d.id);
                     setCatId(undefined);
@@ -97,10 +109,12 @@ export default function Catalog() {
         </Row>
       )}
       {!!deptId && cats.length > 0 && !catId && (
-        <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           {cats.map((c) => (
-            <Col key={c.id} xs={12} sm={8} md={6}>
-              <Card hoverable onClick={() => setCatId(c.id)} title={c.name} />
+            <Col key={c.id} xs={24} sm={12} md={8}>
+              <Card hoverable onClick={() => setCatId(c.id)}>
+                {c.name}
+              </Card>
             </Col>
           ))}
         </Row>
@@ -120,49 +134,37 @@ export default function Catalog() {
               : p.image_url;
           return (
             <Col key={p.id} xs={24} sm={12} md={8}>
-              <Card size="small">
-                <div style={{ display: "flex", gap: 12 }}>
-                  {img ? (
+              <Card
+                hoverable
+                title={p.name}
+                cover={
+                  img ? (
                     <img
                       src={img}
                       alt={p.name}
-                      style={{
-                        width: 100,
-                        height: 80,
-                        objectFit: "cover",
-                        borderRadius: 4,
-                      }}
+                      style={{ width: "100%", height: 220, objectFit: "cover" }}
                     />
-                  ) : null}
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>
-                      {p.name}
-                    </div>
-                    <div
-                      style={{ color: "#666", marginBottom: 6, fontSize: 12 }}
-                    >
-                      {p.short_description}
-                    </div>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 12,
-                        marginBottom: 6,
-                        fontSize: 12,
-                      }}
-                    >
-                      <span>
-                        {t("product.base_price")}:{" "}
-                        {Number(p.base_price).toFixed(2)}
-                      </span>
-                      <span>
-                        {t("product.base_prod_time")}:{" "}
-                        {p.base_production_time_days}
-                      </span>
-                    </div>
-                    <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
-                  </div>
+                  ) : undefined
+                }
+              >
+                {!!p.short_description && (
+                  <p style={{ color: "#666" }}>{p.short_description}</p>
+                )}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginBottom: 8,
+                  }}
+                >
+                  <span>
+                    {t("product.base_price")}: {Number(p.base_price).toFixed(2)}
+                  </span>
+                  <span>
+                    {t("product.base_prod_time")}: {p.base_production_time_days}
+                  </span>
                 </div>
+                <Link to={`/product/${p.id}`}>{t("catalog.view")}</Link>
               </Card>
             </Col>
           );
