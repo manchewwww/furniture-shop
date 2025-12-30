@@ -7,16 +7,13 @@ import (
 	"fmt"
 	"math"
 
+	order_dto "furniture-shop/internal/dtos/orders"
 	ec "furniture-shop/internal/entities/catalog"
 	eo "furniture-shop/internal/entities/orders"
 	eu "furniture-shop/internal/entities/user"
 	"furniture-shop/internal/service"
 	"furniture-shop/internal/storage"
 )
-
-type SelectedOption = service.SelectedOption
-type CreateOrderItem = service.CreateOrderItem
-type CreateOrderInput = service.CreateOrderInput
 
 type ordersService struct {
 	users   storage.UserRepository
@@ -28,7 +25,7 @@ func NewOrdersService(users storage.UserRepository, orders storage.OrderReposito
 	return &ordersService{users: users, orders: orders, product: product}
 }
 
-func (s *ordersService) CreateOrder(ctx context.Context, in service.CreateOrderInput) (*eo.Order, error) {
+func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrderInput) (*eo.Order, error) {
 	if len(in.Items) == 0 {
 		return nil, errors.New("items required")
 	}
@@ -130,8 +127,7 @@ func (s *ordersService) AdminUpdateOrderStatus(ctx context.Context, orderID uint
 	return s.orders.UpdateStatus(ctx, orderID, status)
 }
 
-// Pricing and production-time helpers (DB-free)
-func CalculateUnitPrice(product ec.Product, selected []SelectedOption) float64 {
+func CalculateUnitPrice(product ec.Product, selected []order_dto.SelectedOption) float64 {
 	price := product.BasePrice
 	byID := map[uint]ec.ProductOption{}
 	for _, o := range product.Options {
@@ -150,7 +146,7 @@ func CalculateUnitPrice(product ec.Product, selected []SelectedOption) float64 {
 	return price
 }
 
-func CalculateItemProductionTime(product ec.Product, selected []SelectedOption) int {
+func CalculateItemProductionTime(product ec.Product, selected []order_dto.SelectedOption) int {
 	days := product.BaseProductionTimeDays
 	optionByID := map[uint]ec.ProductOption{}
 	for _, o := range product.Options {
@@ -170,7 +166,7 @@ func CalculateItemProductionTime(product ec.Product, selected []SelectedOption) 
 	return days
 }
 
-func MarshalSelectedOptions(selected []service.SelectedOption) string {
+func MarshalSelectedOptions(selected []order_dto.SelectedOption) string {
 	b, _ := json.Marshal(selected)
 	return string(b)
 }

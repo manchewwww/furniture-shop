@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	auth_dto "furniture-shop/internal/dtos/auth"
 	eu "furniture-shop/internal/entities/user"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
@@ -18,17 +19,9 @@ func NewAuthHandler(svc service.AuthService) *Handler {
 	return &Handler{svc: svc}
 }
 
-type registerDTO struct {
-	Name     string `json:"name" validate:"required,min=2"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-	Address  string `json:"address" validate:"omitempty,min=5"`
-	Phone    string `json:"phone" validate:"omitempty,phone"`
-}
-
 func (h *Handler) Register() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in registerDTO
+		var in auth_dto.RegisterRequest
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -51,14 +44,9 @@ func (h *Handler) createUser(ctx context.Context, u *eu.User) error {
 	return h.svc.CreateUser(ctx, u)
 }
 
-type loginDTO struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
-}
-
 func (h *Handler) Login() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in loginDTO
+		var in auth_dto.LoginRequest
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}

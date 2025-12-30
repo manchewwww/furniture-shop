@@ -5,20 +5,21 @@ import (
 	"errors"
 	"regexp"
 
+	payment_dto "furniture-shop/internal/dtos/payments"
 	eo "furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
 	"furniture-shop/internal/storage"
 )
 
-type CardPayment = service.CardPayment
-
-type paymentService struct{ orders storage.OrderRepository }
+type paymentService struct {
+	orders storage.OrderRepository
+}
 
 func NewPaymentService(orders storage.OrderRepository) service.PaymentService {
 	return &paymentService{orders: orders}
 }
 
-func (s *paymentService) PayByCard(ctx context.Context, in service.CardPayment) (string, error) {
+func (s *paymentService) PayByCard(ctx context.Context, in payment_dto.CardPayment) (string, error) {
 	reDigits := regexp.MustCompile(`^\d+$`)
 	if !reDigits.MatchString(in.CardNumber) || len(in.CardNumber) < 12 || len(in.CardNumber) > 19 {
 		return eo.PaymentStatusDeclined, errors.New("invalid card")

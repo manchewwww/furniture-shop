@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"furniture-shop/internal/config"
+	payment_dto "furniture-shop/internal/dtos/payments"
 	eo "furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
@@ -24,11 +25,9 @@ func NewPaymentsHandler(svc service.PaymentService, orders service.OrdersService
 	return &Handler{svc: svc, orders: orders}
 }
 
-type cardDTO = service.CardPayment
-
 func (h *Handler) PayByCard() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in cardDTO
+		var in payment_dto.CardPayment
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}

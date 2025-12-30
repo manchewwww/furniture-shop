@@ -11,6 +11,7 @@ import (
 	session "github.com/stripe/stripe-go/v84/checkout/session"
 
 	"furniture-shop/internal/config"
+	order_dto "furniture-shop/internal/dtos/orders"
 	"furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
@@ -24,24 +25,9 @@ func NewOrdersHandler(svc service.OrdersService) *Handler {
 	return &Handler{svc: svc}
 }
 
-type orderItemIn struct {
-	ProductID uint                     `json:"product_id" validate:"required,gt=0"`
-	Quantity  int                      `json:"quantity" validate:"required,gt=0"`
-	Options   []service.SelectedOption `json:"options"`
-}
-type createOrderDTO struct {
-	UserID        *uint         `json:"user_id"`
-	Name          string        `json:"name" validate:"required,min=2"`
-	Email         string        `json:"email" validate:"required,email"`
-	Address       string        `json:"address" validate:"required,min=5"`
-	Phone         string        `json:"phone" validate:"required,phone"`
-	Items         []orderItemIn `json:"items" validate:"required,min=1,dive"`
-	PaymentMethod string        `json:"payment_method" validate:"required,oneof=card"`
-}
-
 func (h *Handler) CreateOrder() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in createOrderDTO
+		var in order_dto.CreateOrderInput
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -49,26 +35,15 @@ func (h *Handler) CreateOrder() fiber.Handler {
 			return err
 		}
 
-		// Clean user ID extraction
 		if uid, ok := c.Locals("user_id").(uint); ok {
 			in.UserID = &uid
 		}
 
-		// Map items (consider moving this mapping to a DTO method)
-		items := make([]service.CreateOrderItem, len(in.Items))
-		for i, it := range in.Items {
-			items[i] = service.CreateOrderItem{ProductID: it.ProductID, Quantity: it.Quantity, Options: it.Options}
-		}
-
-		order, err := h.svc.CreateOrder(c.Context(), service.CreateOrderInput{
-			UserID: in.UserID, Name: in.Name, Email: in.Email, Address: in.Address,
-			Phone: in.Phone, Items: items, PaymentMethod: in.PaymentMethod,
-		})
+		order, err := h.svc.CreateOrder(c.Context(), in)
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": err.Error()})
 		}
 
-		// Logic check: if card, get URL. Otherwise, return standard response.
 		if in.PaymentMethod == "card" {
 			url, err := h.createStripeSession(order)
 			if err != nil {
@@ -87,8 +62,7 @@ func (h *Handler) CreateOrder() fiber.Handler {
 
 func (h *Handler) PayExistingOrder() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		uid, _ := c.Locals("user_id").(uint) // Simplified since middleware usually ensures this
-
+		uid, _ := c.Locals("user_id").(uint)
 		id, err := h.getID(c)
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid id"})
@@ -151,13 +125,9 @@ func (h *Handler) AdminListOrders() fiber.Handler {
 	}
 }
 
-type patchStatusDTO struct {
-	Status string `json:"status"`
-}
-
 func (h *Handler) AdminUpdateOrderStatus() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in patchStatusDTO
+		var in order_dto.PatchStatusRequest
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}

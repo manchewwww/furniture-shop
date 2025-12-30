@@ -9,57 +9,23 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 
+	admin_dto "furniture-shop/internal/dtos/admin"
 	ec "furniture-shop/internal/entities/catalog"
 	"furniture-shop/internal/service"
 	vld "furniture-shop/internal/validation"
 )
 
-type DepartmentDTO struct {
-	Name        string `json:"name" validate:"required,min=2"`
-	Description string `json:"description" validate:"omitempty,min=2"`
-	ImageURL    string `json:"image_url" validate:"omitempty,url"`
-}
-
-type CategoryDTO struct {
-	DepartmentID uint   `json:"department_id" validate:"required,gt=0"`
-	Name         string `json:"name" validate:"required,min=2"`
-	Description  string `json:"description" validate:"omitempty,min=2"`
-}
-
-type ProductDTO struct {
-	CategoryID             uint    `json:"category_id" validate:"required,gt=0"`
-	Name                   string  `json:"name" validate:"required,min=2"`
-	ShortDescription       string  `json:"short_description" validate:"omitempty,min=2"`
-	LongDescription        string  `json:"long_description" validate:"omitempty,min=2"`
-	BasePrice              float64 `json:"base_price" validate:"required,gte=0"`
-	BaseProductionTimeDays int     `json:"base_production_time_days" validate:"required,gte=0"`
-	ImageURL               string  `json:"image_url" validate:"omitempty,url"`
-	DefaultWidth           int     `json:"default_width" validate:"required,gt=0"`
-	DefaultHeight          int     `json:"default_height" validate:"required,gt=0"`
-	DefaultDepth           int     `json:"default_depth" validate:"required,gt=0"`
-}
-
 func normalizeImageURL(u string) string {
-    s := strings.TrimSpace(u)
-    if s == "" {
-        return s
-    }
-    if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
-        if i := strings.Index(s, "/uploads/"); i >= 0 {
-            return s[i:]
-        }
-    }
-    return s
-}
-
-type ProductOptionDTO struct {
-	ProductID                     uint    `json:"product_id" validate:"required,gt=0"`
-	OptionType                    string  `json:"option_type" validate:"required,oneof=color size material extra"`
-	OptionName                    string  `json:"option_name" validate:"required,min=1"`
-	PriceModifierType             string  `json:"price_modifier_type" validate:"required,oneof=absolute percent"`
-	PriceModifierValue            float64 `json:"price_modifier_value" validate:"required"`
-	ProductionTimeModifierDays    int     `json:"production_time_modifier_days" validate:"omitempty"`
-	ProductionTimeModifierPercent *int    `json:"production_time_modifier_percent" validate:"omitempty"`
+	s := strings.TrimSpace(u)
+	if s == "" {
+		return s
+	}
+	if strings.HasPrefix(s, "http://") || strings.HasPrefix(s, "https://") {
+		if i := strings.Index(s, "/uploads/"); i >= 0 {
+			return s[i:]
+		}
+	}
+	return s
 }
 
 type Handler struct {
@@ -70,7 +36,6 @@ func NewAdminHandler(svc service.AdminService) *Handler {
 	return &Handler{svc: svc}
 }
 
-// Departments
 func (h *Handler) ListDepartments() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		items, err := h.svc.ListDepartments(c.Context())
@@ -84,7 +49,7 @@ func (h *Handler) ListDepartments() fiber.Handler {
 func (h *Handler) CreateDepartment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		var in DepartmentDTO
+		var in admin_dto.DepartmentDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -101,7 +66,7 @@ func (h *Handler) CreateDepartment() fiber.Handler {
 
 func (h *Handler) UpdateDepartment() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in DepartmentDTO
+		var in admin_dto.DepartmentDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -130,7 +95,6 @@ func (h *Handler) DeleteDepartment() fiber.Handler {
 	}
 }
 
-// Categories
 func (h *Handler) ListCategories() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		items, err := h.svc.ListCategories(c.Context())
@@ -144,7 +108,7 @@ func (h *Handler) ListCategories() fiber.Handler {
 func (h *Handler) CreateCategory() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		var in CategoryDTO
+		var in admin_dto.CategoryDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -161,7 +125,7 @@ func (h *Handler) CreateCategory() fiber.Handler {
 
 func (h *Handler) UpdateCategory() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in CategoryDTO
+		var in admin_dto.CategoryDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -192,7 +156,6 @@ func (h *Handler) DeleteCategory() fiber.Handler {
 	}
 }
 
-// Products
 func (h *Handler) ListProducts() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		items, err := h.svc.ListProducts(c.Context())
@@ -206,26 +169,26 @@ func (h *Handler) ListProducts() fiber.Handler {
 func (h *Handler) CreateProduct() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		var in ProductDTO
+		var in admin_dto.ProductDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
 		if err := vld.ValidateStruct(in); err != nil {
 			return err
 		}
-	img := normalizeImageURL(in.ImageURL)
-	p := ec.Product{
-		CategoryID:             in.CategoryID,
-		Name:                   in.Name,
-		ShortDescription:       in.ShortDescription,
-		LongDescription:        in.LongDescription,
-		BasePrice:              in.BasePrice,
-		BaseProductionTimeDays: in.BaseProductionTimeDays,
-		ImageURL:               img,
-		DefaultWidth:           in.DefaultWidth,
-		DefaultHeight:          in.DefaultHeight,
-		DefaultDepth:           in.DefaultDepth,
-	}
+		img := normalizeImageURL(in.ImageURL)
+		p := ec.Product{
+			CategoryID:             in.CategoryID,
+			Name:                   in.Name,
+			ShortDescription:       in.ShortDescription,
+			LongDescription:        in.LongDescription,
+			BasePrice:              in.BasePrice,
+			BaseProductionTimeDays: in.BaseProductionTimeDays,
+			ImageURL:               img,
+			DefaultWidth:           in.DefaultWidth,
+			DefaultHeight:          in.DefaultHeight,
+			DefaultDepth:           in.DefaultDepth,
+		}
 		if err := h.svc.CreateProduct(c.Context(), &p); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
 		}
@@ -235,7 +198,7 @@ func (h *Handler) CreateProduct() fiber.Handler {
 
 func (h *Handler) UpdateProduct() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in ProductDTO
+		var in admin_dto.ProductDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -246,19 +209,19 @@ func (h *Handler) UpdateProduct() fiber.Handler {
 		if _, err := fmt.Sscan(c.Params("id"), &id); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid id"})
 		}
-	img := normalizeImageURL(in.ImageURL)
-	if err := h.svc.UpdateProduct(c.Context(), id, ec.Product{
-		CategoryID:             in.CategoryID,
-		Name:                   in.Name,
-		ShortDescription:       in.ShortDescription,
-		LongDescription:        in.LongDescription,
-		BasePrice:              in.BasePrice,
-		BaseProductionTimeDays: in.BaseProductionTimeDays,
-		ImageURL:               img,
-		DefaultWidth:           in.DefaultWidth,
-		DefaultHeight:          in.DefaultHeight,
-		DefaultDepth:           in.DefaultDepth,
-	}); err != nil {
+		img := normalizeImageURL(in.ImageURL)
+		if err := h.svc.UpdateProduct(c.Context(), id, ec.Product{
+			CategoryID:             in.CategoryID,
+			Name:                   in.Name,
+			ShortDescription:       in.ShortDescription,
+			LongDescription:        in.LongDescription,
+			BasePrice:              in.BasePrice,
+			BaseProductionTimeDays: in.BaseProductionTimeDays,
+			ImageURL:               img,
+			DefaultWidth:           in.DefaultWidth,
+			DefaultHeight:          in.DefaultHeight,
+			DefaultDepth:           in.DefaultDepth,
+		}); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
 		}
 		return c.JSON(fiber.Map{"message": "updated"})
@@ -278,7 +241,6 @@ func (h *Handler) DeleteProduct() fiber.Handler {
 	}
 }
 
-// Product Options
 func (h *Handler) ListProductOptions() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var pid *uint
@@ -300,7 +262,7 @@ func (h *Handler) ListProductOptions() fiber.Handler {
 func (h *Handler) CreateProductOption() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 
-		var in ProductOptionDTO
+		var in admin_dto.ProductOptionDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -325,7 +287,7 @@ func (h *Handler) CreateProductOption() fiber.Handler {
 
 func (h *Handler) UpdateProductOption() fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var in ProductOptionDTO
+		var in admin_dto.ProductOptionDTO
 		if err := c.BodyParser(&in); err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
 		}
@@ -364,7 +326,6 @@ func (h *Handler) DeleteProductOption() fiber.Handler {
 	}
 }
 
-// UploadImage handles admin image uploads and returns a public URL
 func (h *Handler) UploadImage() fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		fileHeader, err := c.FormFile("file")
