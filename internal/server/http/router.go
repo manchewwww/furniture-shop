@@ -19,7 +19,7 @@ func buildRoutes(s *Server) {
 	catalogH := hc.NewCatalogHandler(s.svc.Catalog)
 	ordersH := ho.NewOrdersHandler(s.svc.Orders)
 	adminH := ha.NewAdminHandler(s.svc.Admin)
-	paymentsH := hp.NewPaymentsHandler(s.svc.Payment, s.svc.Orders)
+	paymentsH := hp.NewPaymentsHandler(s.svc.Payment)
 
 	// Auth
 	hau.Register(api, authH)

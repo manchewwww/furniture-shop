@@ -6,10 +6,8 @@ import (
 	"log"
 
 	"furniture-shop/internal/config"
-	payment_dto "furniture-shop/internal/dtos/payments"
 	eo "furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
-	vld "furniture-shop/internal/validation"
 
 	"github.com/gofiber/fiber/v2"
 	stripe "github.com/stripe/stripe-go/v84"
@@ -17,28 +15,12 @@ import (
 )
 
 type Handler struct {
-	svc    service.PaymentService
-	orders service.OrdersService
+	svc service.PaymentService
 }
 
-func NewPaymentsHandler(svc service.PaymentService, orders service.OrdersService) *Handler {
-	return &Handler{svc: svc, orders: orders}
-}
-
-func (h *Handler) PayByCard() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var in payment_dto.CardPayment
-		if err := c.BodyParser(&in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
-		}
-		if err := vld.ValidateStruct(in); err != nil {
-			return err
-		}
-		status, err := h.svc.PayByCard(c.Context(), in)
-		if err != nil {
-			return c.Status(402).JSON(fiber.Map{"message": "payment failed", "payment_status": "declined"})
-		}
-		return c.JSON(fiber.Map{"message": "payment accepted", "payment_status": status})
+func NewPaymentsHandler(svc service.PaymentService) *Handler {
+	return &Handler{
+		svc: svc,
 	}
 }
 

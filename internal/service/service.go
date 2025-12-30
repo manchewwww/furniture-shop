@@ -4,7 +4,6 @@ import (
 	"context"
 
 	order_dto "furniture-shop/internal/dtos/orders"
-	payment_dto "furniture-shop/internal/dtos/payments"
 	ec "furniture-shop/internal/entities/catalog"
 	eo "furniture-shop/internal/entities/orders"
 	eu "furniture-shop/internal/entities/user"
@@ -53,7 +52,6 @@ type AdminService interface {
 }
 
 type PaymentService interface {
-	PayByCard(ctx context.Context, in payment_dto.CardPayment) (string, error)
 	ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error
 }
 

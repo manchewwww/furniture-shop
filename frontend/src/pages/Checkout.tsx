@@ -10,7 +10,7 @@ import {
   message,
 } from "antd";
 import { useCart } from "../store/CartContext";
-import { createOrder, payByCard } from "../api/orders";
+import { createOrder } from "../api/orders";
 import { useI18n } from "../store/I18nContext";
 
 type PaymentMethod = "card";
@@ -21,9 +21,7 @@ export default function Checkout() {
   const [orderId, setOrderId] = useState<number | null>(null);
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("card");
   const [placing, setPlacing] = useState(false);
-  const [paying, setPaying] = useState(false);
   const [orderForm] = Form.useForm();
-  const [cardForm] = Form.useForm();
 
   const requiredTrim = (msg: string) => ({
     required: true,
