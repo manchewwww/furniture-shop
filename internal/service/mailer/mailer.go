@@ -3,7 +3,6 @@ package mailer
 import (
 	"fmt"
 	"furniture-shop/internal/config"
-	"log"
 	"net/smtp"
 )
 
@@ -34,11 +33,4 @@ func (s *smtpSender) Send(to, subject, body string) error {
 	auth := smtp.PlainAuth("", s.user, s.pass, s.host)
 	msg := []byte(fmt.Sprintf("To: %s\r\nSubject: %s\r\nFrom: %s\r\n\r\n%s\r\n", to, subject, s.from, body))
 	return smtp.SendMail(addr, auth, s.from, []string{to}, msg)
-}
-
-type logSender struct{}
-
-func (l *logSender) Send(to, subject, body string) error {
-	log.Printf("MAIL LOG -> to=%s subject=%q body=%q", to, subject, body)
-	return nil
 }
