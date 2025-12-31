@@ -68,7 +68,7 @@ export default function Cart() {
         <Row gutter={16}>
           <Col xs={24} md={16}>
             <Table
-              rowKey={(r) => String(r.product.id)}
+              rowKey={(r) => String(r.id || r.product.id)}
               dataSource={items}
               pagination={false}
               columns={[

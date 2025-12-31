@@ -85,10 +85,17 @@ func (r *CartRepository) AddItem(ctx context.Context, userID uint, item *eo.Cart
 				return err
 			}
 		}
-		item.CartID = c.ID
 		if item.Quantity <= 0 {
 			item.Quantity = 1
 		}
+		var existing eo.CartItem
+		q := tx.Where("cart_id = ? AND product_id = ? AND COALESCE(NULLIF(selected_options_json,''),'[]') = ?", c.ID, item.ProductID, item.SelectedOptionsJSON)
+		if err := q.First(&existing).Error; err == nil {
+			return tx.Model(&existing).UpdateColumn("quantity", gorm.Expr("quantity + ?", item.Quantity)).Error
+		} else if err != nil && err != gorm.ErrRecordNotFound {
+			return err
+		}
+		item.CartID = c.ID
 		return tx.Create(item).Error
 	})
 	if err != nil {
@@ -102,13 +109,14 @@ func (r *CartRepository) UpdateItem(ctx context.Context, userID uint, itemID uin
 	if err := r.db.WithContext(ctx).Where("user_id = ?", userID).First(&c).Error; err != nil {
 		return err
 	}
-	item.CartID = 0 // avoid updates to FK
+	item.CartID = 0
+	item.ProductID = 0
 	if item.Quantity <= 0 {
 		item.Quantity = 1
 	}
 	return r.db.WithContext(ctx).Model(&eo.CartItem{}).
 		Where("id = ? AND cart_id = ?", itemID, c.ID).
-		Select("product_id", "quantity", "selected_options_json").
+		Select("quantity", "selected_options_json").
 		Updates(item).Error
 }
 

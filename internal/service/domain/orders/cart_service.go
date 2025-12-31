@@ -3,6 +3,7 @@ package orders
 import (
 	"context"
 	"encoding/json"
+	"sort"
 
 	cartdto "furniture-shop/internal/dtos/cart"
 	eo "furniture-shop/internal/entities/orders"
@@ -28,6 +29,12 @@ func (s *cartService) Replace(ctx context.Context, userID uint, in cartdto.Repla
 		if it.Quantity <= 0 {
 			it.Quantity = 1
 		}
+		sort.Slice(it.Options, func(i, j int) bool {
+			if it.Options[i].ID == it.Options[j].ID {
+				return it.Options[i].Type < it.Options[j].Type
+			}
+			return it.Options[i].ID < it.Options[j].ID
+		})
 		b, _ := json.Marshal(it.Options)
 		items = append(items, eo.CartItem{ProductID: it.ProductID, Quantity: it.Quantity, SelectedOptionsJSON: string(b)})
 	}
@@ -38,6 +45,12 @@ func (s *cartService) AddItem(ctx context.Context, userID uint, in cartdto.AddCa
 	if in.Quantity <= 0 {
 		in.Quantity = 1
 	}
+	sort.Slice(in.Options, func(i, j int) bool {
+		if in.Options[i].ID == in.Options[j].ID {
+			return in.Options[i].Type < in.Options[j].Type
+		}
+		return in.Options[i].ID < in.Options[j].ID
+	})
 	b, _ := json.Marshal(in.Options)
 	item := &eo.CartItem{ProductID: in.ProductID, Quantity: in.Quantity, SelectedOptionsJSON: string(b)}
 	return s.carts.AddItem(ctx, userID, item)
@@ -47,6 +60,12 @@ func (s *cartService) UpdateItem(ctx context.Context, userID uint, itemID uint, 
 	if in.Quantity <= 0 {
 		in.Quantity = 1
 	}
+	sort.Slice(in.Options, func(i, j int) bool {
+		if in.Options[i].ID == in.Options[j].ID {
+			return in.Options[i].Type < in.Options[j].Type
+		}
+		return in.Options[i].ID < in.Options[j].ID
+	})
 	b, _ := json.Marshal(in.Options)
 	return s.carts.UpdateItem(ctx, userID, itemID, eo.CartItem{Quantity: in.Quantity, SelectedOptionsJSON: string(b)})
 }

@@ -17,6 +17,7 @@ import {
 import { fetchProduct } from "../api/catalog";
 
 export type CartItem = {
+  id?: number;
   product: any;
   quantity: number;
   options: { id: number; type: string }[];
@@ -54,6 +55,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
         const serverItemsRaw: any[] = server.items || [];
         const serverItems: CartItem[] = await Promise.all(
           serverItemsRaw.map(async (it: any) => ({
+            id: it.id,
             product: await fetchProduct(it.product_id),
             quantity: it.quantity,
             options: JSON.parse(it.selected_options_json || "[]"),
@@ -83,9 +85,11 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             options: it.options,
           }));
           await apiReplace(payload);
+          localStorage.setItem("cart", JSON.stringify([]));
           const refreshed = await apiGet();
           const mergedHydrated: CartItem[] = await Promise.all(
             (refreshed.items || []).map(async (it: any) => ({
+              id: it.id,
               product: await fetchProduct(it.product_id),
               quantity: it.quantity,
               options: JSON.parse(it.selected_options_json || "[]"),
@@ -112,6 +116,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           const s = await apiGet();
           const mapped: CartItem[] = await Promise.all(
             (s.items || []).map(async (it: any) => ({
+              id: it.id,
               product: await fetchProduct(it.product_id),
               quantity: it.quantity,
               options: JSON.parse(it.selected_options_json || "[]"),
@@ -140,6 +145,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           const ref = await apiGet();
           const mapped: CartItem[] = await Promise.all(
             (ref.items || []).map(async (it: any) => ({
+              id: it.id,
               product: await fetchProduct(it.product_id),
               quantity: it.quantity,
               options: JSON.parse(it.selected_options_json || "[]"),
@@ -162,6 +168,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           const ref = await apiGet();
           const mapped: CartItem[] = await Promise.all(
             (ref.items || []).map(async (it: any) => ({
+              id: it.id,
               product: await fetchProduct(it.product_id),
               quantity: it.quantity,
               options: JSON.parse(it.selected_options_json || "[]"),
