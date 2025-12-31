@@ -24,11 +24,11 @@ export type CartItem = {
 
 type CartCtxType = {
   items: CartItem[];
-  add: (item: CartItem) => void;
-  remove: (productId: number) => void;
-  increment: (productId: number) => void;
-  decrement: (productId: number) => void;
-  clear: () => void;
+  add: (item: CartItem) => Promise<void>;
+  remove: (productId: number) => Promise<void>;
+  increment: (productId: number) => Promise<void>;
+  decrement: (productId: number) => Promise<void>;
+  clear: () => Promise<void>;
 };
 
 const CartCtx = createContext<CartCtxType | undefined>(undefined);
@@ -162,11 +162,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
               });
           }
           const ref = await apiGet();
-          const mapped: CartItem[] = (ref.items || []).map((it: any) => ({
-            product: { id: it.product_id },
-            quantity: it.quantity,
-            options: JSON.parse(it.selected_options_json || "[]"),
-          }));
+          const mapped: CartItem[] = await Promise.all(
+            (ref.items || []).map(async (it: any) => ({
+              product: await fetchProduct(it.product_id),
+              quantity: it.quantity,
+              options: JSON.parse(it.selected_options_json || "[]"),
+            }))
+          );
           setItems(mapped);
         } else {
           setItems((prev) =>
