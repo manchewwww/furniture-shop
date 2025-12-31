@@ -99,6 +99,10 @@ func seedData() error {
 		for i := 1; i <= 10; i++ { // exactly 10 products per category
 			city := cityNames[rand.Intn(len(cityNames))]
 			name := fmt.Sprintf("%s %s %d", city, cat.Name, i)
+			qty := 0
+			if rand.Intn(100) >= 20 {
+				qty = 5 + rand.Intn(46)
+			}
 			p := ec.Product{
 				CategoryID:             cat.ID,
 				Name:                   name,
@@ -108,6 +112,7 @@ func seedData() error {
 				BaseProductionTimeDays: 7 + rand.Intn(21),
 				ImageURL:               findUploadImage(cat.Name, i),
 				BaseMaterial:           mats[rand.Intn(len(mats))],
+				Quantity:               qty,
 				DefaultWidth:           60 + rand.Intn(140),
 				DefaultHeight:          35 + rand.Intn(180),
 				DefaultDepth:           30 + rand.Intn(70),
@@ -121,19 +126,32 @@ func seedData() error {
 	// helper to make URL-friendly file names for categories
 	// e.g. "Coffee Tables" -> "coffee-tables"
 
-	// Options for first 10 products
-	var some []ec.Product
-	if err := DB.Limit(10).Find(&some).Error; err == nil && len(some) > 0 {
-		for _, pr := range some {
-			opts := []ec.ProductOption{
-				{ProductID: pr.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
-				{ProductID: pr.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
-				{ProductID: pr.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
-				{ProductID: pr.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 20, ProductionTimeModifierDays: 3},
-				{ProductID: pr.ID, OptionType: "extra", OptionName: "Soft-Close Hinges", PriceModifierType: "absolute", PriceModifierValue: 35, ProductionTimeModifierDays: 1},
+	// Options: assign colors/materials to a subset of products
+	var allProducts []ec.Product
+	if err := DB.Find(&allProducts).Error; err == nil && len(allProducts) > 0 {
+		for _, pr := range allProducts {
+			// ~60% get colors
+			if rand.Intn(100) < 60 {
+				colorOpts := []ec.ProductOption{
+					{ProductID: pr.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
+					{ProductID: pr.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
+					{ProductID: pr.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
+					{ProductID: pr.ID, OptionType: "color", OptionName: "Black", PriceModifierType: "absolute", PriceModifierValue: 0},
+				}
+				for i := range colorOpts {
+					_ = DB.Create(&colorOpts[i]).Error
+				}
 			}
-			for i := range opts {
-				_ = DB.Create(&opts[i]).Error
+			// ~40% get materials
+			if rand.Intn(100) < 40 {
+				materialOpts := []ec.ProductOption{
+					{ProductID: pr.ID, OptionType: "material", OptionName: "Engineered Wood", PriceModifierType: "percent", PriceModifierValue: 0, ProductionTimeModifierDays: 0},
+					{ProductID: pr.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 20, ProductionTimeModifierDays: 3},
+					{ProductID: pr.ID, OptionType: "material", OptionName: "Metal Frame", PriceModifierType: "percent", PriceModifierValue: 10, ProductionTimeModifierDays: 1},
+				}
+				for i := range materialOpts {
+					_ = DB.Create(&materialOpts[i]).Error
+				}
 			}
 		}
 	}
