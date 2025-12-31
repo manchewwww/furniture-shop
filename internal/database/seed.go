@@ -68,6 +68,7 @@ func seedData() error {
 				BaseProductionTimeDays: 7 + rand.Intn(21),
 				ImageURL:               "https://via.placeholder.com/400x300",
 				BaseMaterial:           []string{"MDF", "Wood", "Metal"}[rand.Intn(3)],
+				Quantity:               25 + rand.Intn(50),
 				DefaultWidth:           80 + rand.Intn(120),
 				DefaultHeight:          30 + rand.Intn(170),
 				DefaultDepth:           30 + rand.Intn(70),

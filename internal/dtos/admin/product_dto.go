@@ -12,5 +12,5 @@ type ProductDTO struct {
 	DefaultHeight          int     `json:"default_height" validate:"required,gt=0"`
 	DefaultDepth           int     `json:"default_depth" validate:"required,gt=0"`
 	BaseMaterial           string  `json:"base_material" validate:"omitempty,min=1"`
-	StockQuantity          float64 `json:"stock_quantity" validate:"omitempty,gte=0"`
+	Quantity               int     `json:"quantity" validate:"omitempty,gte=0"`
 }

@@ -73,7 +73,7 @@ func (r *ProductRepository) Create(ctx context.Context, p *ec.Product) error {
 func (r *ProductRepository) Update(ctx context.Context, id uint, p ec.Product) error {
 	return r.db.WithContext(ctx).Model(&ec.Product{}).Where("id = ?", id).
 		Select("name", "short_description", "long_description", "base_price", "base_production_time_days", "category_id", "image_url",
-			"default_width", "default_height", "default_depth", "base_material").
+			"default_width", "default_height", "default_depth", "base_material", "quantity").
 		Updates(p).Error
 }
 
@@ -93,4 +93,10 @@ func (r *ProductRepository) IncrementRecommendation(ctx context.Context, product
 		}
 		return tx.Model(&rc).UpdateColumn("count", gorm.Expr("count + 1")).Error
 	})
+}
+
+func (r *ProductRepository) AdjustQuantity(ctx context.Context, productID uint, delta int) error {
+	return r.db.WithContext(ctx).Model(&ec.Product{}).
+		Where("id = ?", productID).
+		UpdateColumn("quantity", gorm.Expr("GREATEST(quantity + ?, 0)", delta)).Error
 }

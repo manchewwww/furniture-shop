@@ -83,22 +83,19 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			SelectedOptionsJSON:          MarshalSelectedOptions(it.Options),
 		})
 		total += line
-		if p.BaseMaterial != "" {
-			qty, _ := s.stock.FindByMaterial(ctx, p.BaseMaterial)
-			if qty < float64(it.Quantity) {
-				allInStock = false
-				if qty > 0 {
-					_ = s.stock.AdjustQuantity(ctx, p.BaseMaterial, -qty)
-				}
-			} else {
-				_ = s.stock.AdjustQuantity(ctx, p.BaseMaterial, float64(-it.Quantity))
+		available := p.Quantity
+		if available < it.Quantity {
+			allInStock = false
+			if available > 0 {
+				_ = s.product.AdjustQuantity(ctx, p.ID, -available)
 			}
 		} else {
-			allInStock = false
+			_ = s.product.AdjustQuantity(ctx, p.ID, -it.Quantity)
 		}
 		for q := 0; q < it.Quantity; q++ {
 			_ = s.product.IncrementRecommendation(ctx, p.ID)
 		}
+		_ = s.product.AdjustQuantity(ctx, p.ID, -it.Quantity)
 	}
 	order.TotalPrice = total
 	if allInStock {

@@ -189,13 +189,12 @@ func (h *Handler) CreateProduct() fiber.Handler {
 			DefaultHeight:          in.DefaultHeight,
 			DefaultDepth:           in.DefaultDepth,
 			BaseMaterial:           in.BaseMaterial,
+			Quantity:               in.Quantity,
 		}
 		if err := h.svc.CreateProduct(c.Context(), &p); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
 		}
-		if in.BaseMaterial != "" {
-			_ = h.svc.UpsertStock(c.Context(), in.BaseMaterial, in.StockQuantity, "pcs")
-		}
+
 		return c.JSON(p)
 	}
 }
@@ -226,11 +225,9 @@ func (h *Handler) UpdateProduct() fiber.Handler {
 			DefaultHeight:          in.DefaultHeight,
 			DefaultDepth:           in.DefaultDepth,
 			BaseMaterial:           in.BaseMaterial,
+			Quantity:               in.Quantity,
 		}); err != nil {
 			return c.Status(500).JSON(fiber.Map{"message": "server error"})
-		}
-		if in.BaseMaterial != "" {
-			_ = h.svc.UpsertStock(c.Context(), in.BaseMaterial, in.StockQuantity, "pcs")
 		}
 		return c.JSON(fiber.Map{"message": "updated"})
 	}

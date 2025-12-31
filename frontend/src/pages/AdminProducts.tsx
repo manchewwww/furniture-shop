@@ -96,7 +96,7 @@ export default function AdminProducts() {
       default_height: v.default_height,
       default_depth: v.default_depth,
       base_material: v.base_material,
-      stock_quantity: v.stock_quantity ?? 0,
+      quantity: v.quantity ?? 0,
     };
     if (editing) {
       await api.put(`/admin/products/${editing.id}`, payload);
@@ -226,6 +226,7 @@ export default function AdminProducts() {
             { title: "ID", dataIndex: "id", width: 60 },
             { title: t("product_name"), dataIndex: "name" },
             { title: t("product_description"), dataIndex: "short_description" },
+            { title: "Quantity", dataIndex: "quantity" },
             { title: t("product_price"), dataIndex: "base_price" },
             {
               title: t("orders.col.eta_days"),
@@ -279,6 +280,7 @@ export default function AdminProducts() {
                         name: r.name,
                         description: r.short_description || r.long_description,
                         price: r.base_price,
+                        quantity: r.quantity,
                         production_days: r.base_production_time_days,
                         image: imageVal,
                         default_width: r.default_width,
@@ -397,6 +399,13 @@ export default function AdminProducts() {
               rules={[{ required: true }]}
             >
               <InputNumber min={0} step={0.01} style={{ width: "100%" }} />
+            </Form.Item>
+            <Form.Item
+              name="quantity"
+              label="Quantity"
+              rules={[{ required: true }]}
+            >
+              <InputNumber min={0} step={1} style={{ width: "100%" }} />
             </Form.Item>
             <Form.Item label="Dimensions (cm)">
               <div style={{ display: "flex", gap: 8 }}>

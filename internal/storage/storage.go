@@ -43,6 +43,7 @@ type ProductRepository interface {
 	Create(ctx context.Context, p *ec.Product) error
 	Update(ctx context.Context, id uint, p ec.Product) error
 	Delete(ctx context.Context, id uint) error
+	AdjustQuantity(ctx context.Context, productID uint, delta int) error
 }
 
 // Inventory / Stock

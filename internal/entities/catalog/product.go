@@ -12,6 +12,7 @@ type Product struct {
 	BaseProductionTimeDays int             `json:"base_production_time_days"`
 	ImageURL               string          `json:"image_url"`
 	BaseMaterial           string          `json:"base_material"`
+	Quantity               int             `json:"quantity"`
 	DefaultWidth           int             `json:"default_width"`
 	DefaultHeight          int             `json:"default_height"`
 	DefaultDepth           int             `json:"default_depth"`
