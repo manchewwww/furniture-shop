@@ -27,6 +27,9 @@ export default function AdminProducts() {
   const [productForm] = Form.useForm();
   const [editing, setEditing] = useState<any | null>(null);
   const [colorOptions, setColorOptions] = useState<string[]>([]);
+  const [materialOptions, setMaterialOptions] = useState<string[]>([]);
+  const [extraOptions, setExtraOptions] = useState<string[]>([]);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const selectedDept: number | undefined = Form.useWatch(
     "department_id",
     productForm
@@ -99,32 +102,55 @@ export default function AdminProducts() {
         const existing = await api.get(`/admin/product_options`, {
           params: { product_id: editing.id },
         });
-        const colors = (existing.data || []).filter(
-          (o: any) => o.option_type === "color"
+        const toDelete = (existing.data || []).filter((o: any) =>
+          ["color", "material", "size", "extra"].includes(o.option_type)
         );
         await Promise.all(
-          colors.map((o: any) => api.delete(`/admin/product_options/${o.id}`))
+          toDelete.map((o: any) => api.delete(`/admin/product_options/${o.id}`))
         );
       } catch {}
-      if (colorOptions.length) {
-        await Promise.all(
-          colorOptions.map((name) =>
-            api.post(`/admin/product_options`, {
-              product_id: editing.id,
-              option_type: "color",
-              option_name: name,
-              price_modifier_type: "absolute",
-              price_modifier_value: 0,
-            })
-          )
-        );
-      }
+      const posts: Promise<any>[] = [];
+      colorOptions.forEach((name) =>
+        posts.push(
+          api.post(`/admin/product_options`, {
+            product_id: editing.id,
+            option_type: "color",
+            option_name: name,
+            price_modifier_type: "absolute",
+            price_modifier_value: 0,
+          })
+        )
+      );
+      materialOptions.forEach((name) =>
+        posts.push(
+          api.post(`/admin/product_options`, {
+            product_id: editing.id,
+            option_type: "material",
+            option_name: name,
+            price_modifier_type: "absolute",
+            price_modifier_value: 0,
+          })
+        )
+      );
+      extraOptions.forEach((name) =>
+        posts.push(
+          api.post(`/admin/product_options`, {
+            product_id: editing.id,
+            option_type: "extra",
+            option_name: name,
+            price_modifier_type: "absolute",
+            price_modifier_value: 0,
+          })
+        )
+      );
+      if (posts.length) await Promise.all(posts);
     } else {
       const created = await api.post("/admin/products", payload);
       const newId = created.data?.id;
-      if (newId && colorOptions.length) {
-        await Promise.all(
-          colorOptions.map((name) =>
+      if (newId) {
+        const posts: Promise<any>[] = [];
+        colorOptions.forEach((name) =>
+          posts.push(
             api.post(`/admin/product_options`, {
               product_id: newId,
               option_type: "color",
@@ -134,6 +160,29 @@ export default function AdminProducts() {
             })
           )
         );
+        materialOptions.forEach((name) =>
+          posts.push(
+            api.post(`/admin/product_options`, {
+              product_id: newId,
+              option_type: "material",
+              option_name: name,
+              price_modifier_type: "absolute",
+              price_modifier_value: 0,
+            })
+          )
+        );
+        extraOptions.forEach((name) =>
+          posts.push(
+            api.post(`/admin/product_options`, {
+              product_id: newId,
+              option_type: "extra",
+              option_name: name,
+              price_modifier_type: "absolute",
+              price_modifier_value: 0,
+            })
+          )
+        );
+        if (posts.length) await Promise.all(posts);
       }
     }
     setOpenProduct(false);
@@ -157,6 +206,9 @@ export default function AdminProducts() {
             onClick={() => {
               setEditing(null);
               setColorOptions([]);
+              setMaterialOptions([]);
+              setExtraOptions([]);
+              setImagePreview(null);
               productForm.resetFields();
               setOpenProduct(true);
             }}
@@ -231,17 +283,34 @@ export default function AdminProducts() {
                         default_height: r.default_height,
                         default_depth: r.default_depth,
                       });
+                      setImagePreview(imageVal || null);
                       api
                         .get(`/admin/product_options`, {
                           params: { product_id: r.id },
                         })
                         .then((res) => {
-                          const colors = (res.data || [])
-                            .filter((o: any) => o.option_type === "color")
-                            .map((o: any) => o.option_name);
-                          setColorOptions(colors);
+                          const items = (res.data || []) as any[];
+                          setColorOptions(
+                            items
+                              .filter((o) => o.option_type === "color")
+                              .map((o) => o.option_name)
+                          );
+                          setMaterialOptions(
+                            items
+                              .filter((o) => o.option_type === "material")
+                              .map((o) => o.option_name)
+                          );
+                          setExtraOptions(
+                            items
+                              .filter((o) => o.option_type === "extra")
+                              .map((o) => o.option_name)
+                          );
                         })
-                        .catch(() => setColorOptions([]));
+                        .catch(() => {
+                          setColorOptions([]);
+                          setMaterialOptions([]);
+                          setExtraOptions([]);
+                        });
                     }}
                   >
                     Edit
@@ -267,6 +336,9 @@ export default function AdminProducts() {
             setOpenProduct(false);
             setEditing(null);
             setColorOptions([]);
+            setMaterialOptions([]);
+            setExtraOptions([]);
+            setImagePreview(null);
           }}
         >
           <Form layout="vertical" form={productForm}>
@@ -367,13 +439,6 @@ export default function AdminProducts() {
             >
               <InputNumber min={0} step={1} style={{ width: "100%" }} />
             </Form.Item>
-            <Form.Item
-              name="image"
-              label={t("product_image")}
-              rules={[{ required: true }]}
-            >
-              <Input placeholder="https://... or upload below" />
-            </Form.Item>
             <Form.Item label="Colours">
               <Select
                 mode="tags"
@@ -384,6 +449,59 @@ export default function AdminProducts() {
                 tokenSeparators={[",", " ", ";"]}
                 allowClear
               />
+            </Form.Item>
+            <Form.Item label="Materials">
+              <Select
+                mode="tags"
+                value={materialOptions}
+                onChange={(vals) => setMaterialOptions(vals as string[])}
+                placeholder="Type material names and press Enter"
+                tokenSeparators={[",", " ", ";"]}
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item label="Extras">
+              <Select
+                mode="tags"
+                value={extraOptions}
+                onChange={(vals) => setExtraOptions(vals as string[])}
+                placeholder="Type extras and press Enter"
+                tokenSeparators={[",", " ", ";"]}
+                allowClear
+              />
+            </Form.Item>
+            <Form.Item label={t("product_image")}>
+              {imagePreview ? (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    marginBottom: 8,
+                  }}
+                >
+                  <img
+                    src={imagePreview}
+                    alt="preview"
+                    style={{
+                      width: 160,
+                      height: 120,
+                      objectFit: "cover",
+                      borderRadius: 4,
+                      flex: "0 0 auto",
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: "#555",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {imagePreview}
+                  </div>
+                </div>
+              ) : null}
             </Form.Item>
             <Upload
               accept="image/*"
@@ -404,6 +522,7 @@ export default function AdminProducts() {
                     ? res.data.url
                     : origin + res.data.url;
                   productForm.setFieldsValue({ image: finalUrl });
+                  setImagePreview(finalUrl);
                   message.success(t("upload_success"));
                   opts.onSuccess?.(res.data);
                 } catch (e) {
