@@ -35,6 +35,26 @@ func LoadEnvFile() error {
 	if stripeWebhookSecret == "" {
 		return fmt.Errorf("STRIPE_WEBHOOK_SECRET is required")
 	}
+	emailSenderHost := os.Getenv("SMTP_HOST")
+	if emailSenderHost == "" {
+		return fmt.Errorf("SMTP_HOST is required")
+	}
+	emailSenderPort := os.Getenv("SMTP_PORT")
+	if emailSenderPort == "" {
+		return fmt.Errorf("SMTP_PORT is required")
+	}
+	emailSenderUser := os.Getenv("SMTP_USER")
+	if emailSenderUser == "" {
+		return fmt.Errorf("SMTP_USER is required")
+	}
+	emailSenderPass := os.Getenv("SMTP_PASS")
+	if emailSenderPass == "" {
+		return fmt.Errorf("SMTP_PASS is required")
+	}
+	emailSenderFrom := os.Getenv("FROM_EMAIL")
+	if emailSenderFrom == "" {
+		return fmt.Errorf("FROM_EMAIL is required")
+	}
 
 	Env = EnvConfig{
 		DBUser:              dbUser,

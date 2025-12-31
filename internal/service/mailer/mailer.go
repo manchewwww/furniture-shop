@@ -2,9 +2,9 @@ package mailer
 
 import (
 	"fmt"
+	"furniture-shop/internal/config"
 	"log"
 	"net/smtp"
-	"os"
 )
 
 type Sender interface {
@@ -19,17 +19,14 @@ type smtpSender struct {
 	from string
 }
 
-func NewSenderFromEnv() Sender {
-	host := os.Getenv("SMTP_HOST")
-	port := os.Getenv("SMTP_PORT")
-	user := os.Getenv("SMTP_USER")
-	pass := os.Getenv("SMTP_PASS")
-	from := os.Getenv("FROM_EMAIL")
-	if host == "" || port == "" || user == "" || pass == "" || from == "" {
-		log.Printf("MAILER: SMTP not fully configured; emails will be logged only")
-		return &logSender{}
+func NewSender() Sender {
+	return &smtpSender{
+		host: config.Env.EmailSenderHost,
+		port: config.Env.EmailSenderPort,
+		user: config.Env.EmailSenderUser,
+		pass: config.Env.EmailSenderPass,
+		from: config.Env.EmailSenderFrom,
 	}
-	return &smtpSender{host: host, port: port, user: user, pass: pass, from: from}
 }
 
 func (s *smtpSender) Send(to, subject, body string) error {

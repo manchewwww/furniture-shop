@@ -47,9 +47,9 @@ func (h *Handler) CreateOrder() fiber.Handler {
 
 		to := c.Locals("user_email")
 		if s, ok := to.(string); ok && s != "" {
-			mailer.NewSenderFromEnv().Send(s, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
+			mailer.NewSender().Send(s, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
 		} else if in.Email != "" {
-			mailer.NewSenderFromEnv().Send(in.Email, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
+			mailer.NewSender().Send(in.Email, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
 		}
 
 		if in.PaymentMethod == "card" {
