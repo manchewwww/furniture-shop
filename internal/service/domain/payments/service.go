@@ -22,13 +22,28 @@ func NewPaymentService(orders storage.OrderRepository, products storage.ProductR
 }
 
 func (s *paymentService) ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error {
+	var prevPayment string
+	var withItems *eo.Order
+	if o, err := s.orders.FindWithItems(ctx, orderID); err == nil {
+		prevPayment = o.PaymentStatus
+		withItems = o
+	}
+
 	if err := s.orders.UpdatePaymentStatus(ctx, orderID, paymentStatus); err != nil {
 		return err
 	}
 	if err := s.orders.UpdateStatus(ctx, orderID, orderStatus); err != nil {
 		return err
 	}
+
 	if paymentStatus == "paid" {
+		if prevPayment != "paid" && withItems != nil {
+			for _, it := range withItems.Items {
+				if derr := s.products.AdjustQuantity(ctx, it.ProductID, -it.Quantity); derr != nil {
+					return derr
+				}
+			}
+		}
 		_ = s.orders.UpdateStatus(ctx, orderID, string(eo.OrderStatusInProduction))
 		if ord, err := s.orders.FindByID(ctx, orderID); err == nil {
 			if u, err := s.users.FindByID(ctx, ord.UserID); err == nil {
