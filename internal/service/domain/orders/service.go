@@ -62,6 +62,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 	order := &eo.Order{UserID: user.ID, Status: eo.OrderStatusNew, PaymentMethod: in.PaymentMethod, PaymentStatus: eo.PaymentStatusPending}
 	var items []eo.OrderItem
 	var total float64
+	allInStock := true
 	for _, it := range in.Items {
 		p, err := s.product.FindByID(ctx, it.ProductID)
 		if err != nil {
@@ -82,16 +83,25 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			SelectedOptionsJSON:          MarshalSelectedOptions(it.Options),
 		})
 		total += line
-		if !p.IsMadeToOrder && p.BaseMaterial != "" {
+		if p.BaseMaterial != "" {
 			qty, _ := s.stock.FindByMaterial(ctx, p.BaseMaterial)
 			if qty < float64(it.Quantity) {
-				return nil, fmt.Errorf("insufficient stock for material %s", p.BaseMaterial)
+				allInStock = false
 			}
+		} else {
+			allInStock = false
+		}
+		for q := 0; q < it.Quantity; q++ {
+			_ = s.product.IncrementRecommendation(ctx, p.ID)
 		}
 	}
 	order.TotalPrice = total
-	workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
-	order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
+	if allInStock {
+		order.EstimatedProductionTimeDays = 1
+	} else {
+		workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
+		order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
+	}
 	order.Items = items
 
 	if err := s.orders.CreateWithItems(ctx, order); err != nil {

@@ -44,8 +44,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     return saved ? JSON.parse(saved) : [];
   });
   useEffect(() => {
-    localStorage.setItem("cart", JSON.stringify(items));
-  }, [items]);
+    if (!isAuthenticated) {
+      localStorage.setItem("cart", JSON.stringify(items));
+    }
+  }, [items, isAuthenticated]);
 
   useEffect(() => {
     const sync = async () => {
@@ -62,14 +64,17 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           }))
         );
 
-        if (items.length) {
+        // Merge only with guest snapshot from localStorage
+        const guestRaw = localStorage.getItem("cart");
+        const guestItems: CartItem[] = guestRaw ? JSON.parse(guestRaw) : [];
+        if (guestItems.length) {
           const keyOf = (ci: CartItem) =>
             `${ci.product.id}:${JSON.stringify(
               (ci.options || []).slice().sort((a, b) => a.id - b.id)
             )}`;
           const map = new Map<string, CartItem>();
           for (const it of serverItems) map.set(keyOf(it), { ...it });
-          for (const it of items) {
+          for (const it of guestItems) {
             const k = keyOf(it);
             if (map.has(k)) {
               map.get(k)!.quantity += it.quantity;
@@ -85,6 +90,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             options: it.options,
           }));
           await apiReplace(payload);
+          // Clear guest snapshot so future refreshes don't re-merge
           localStorage.setItem("cart", JSON.stringify([]));
           const refreshed = await apiGet();
           const mergedHydrated: CartItem[] = await Promise.all(
@@ -199,6 +205,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           const ref = await apiGet();
           const mapped: CartItem[] = await Promise.all(
             (ref.items || []).map(async (it: any) => ({
+              id: it.id,
               product: await fetchProduct(it.product_id),
               quantity: it.quantity,
               options: JSON.parse(it.selected_options_json || "[]"),
