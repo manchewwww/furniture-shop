@@ -39,7 +39,7 @@ func buildRoutes(s *Server) {
 	authGroup.Get("/orders/:id", ordersH.UserOrderDetails())
 	authGroup.Post("/orders/:id/pay", ordersH.PayExistingOrder())
 	// Cart
-	ho.RegisterCartRoutes(api, cartH)
+	ho.RegisterCartRoutes(authGroup, cartH)
 
 	// Admin routes
 	adminGroup := api.Group("/admin", middleware.JWTAuth(), middleware.RequireAdmin)

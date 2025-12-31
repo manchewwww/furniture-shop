@@ -14,6 +14,7 @@ import (
 	order_dto "furniture-shop/internal/dtos/orders"
 	"furniture-shop/internal/entities/orders"
 	"furniture-shop/internal/service"
+	"furniture-shop/internal/service/mailer"
 	vld "furniture-shop/internal/validation"
 )
 
@@ -42,6 +43,13 @@ func (h *Handler) CreateOrder() fiber.Handler {
 		order, err := h.svc.CreateOrder(c.Context(), in)
 		if err != nil {
 			return c.Status(400).JSON(fiber.Map{"message": err.Error()})
+		}
+
+		to := c.Locals("user_email")
+		if s, ok := to.(string); ok && s != "" {
+			mailer.NewSenderFromEnv().Send(s, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
+		} else if in.Email != "" {
+			mailer.NewSenderFromEnv().Send(in.Email, "Order created", fmt.Sprintf("Your order #%d has been created and is pending.", order.ID))
 		}
 
 		if in.PaymentMethod == "card" {

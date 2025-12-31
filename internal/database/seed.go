@@ -51,76 +51,44 @@ func seedData() error {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	var catWardrobes, catShelves, catBeds ec.Category
-	DB.Where("name = ?", "Wardrobes").First(&catWardrobes)
-	DB.Where("name = ?", "Shelves").First(&catShelves)
-	DB.Where("name = ?", "Beds").First(&catBeds)
-
-	var products []ec.Product
-	for i := 1; i <= 10; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catWardrobes.ID,
-			Name:                   "Modular Wardrobe " + itoa(i),
-			ShortDescription:       "Modular wardrobe with customizable layout",
-			LongDescription:        "Configurable wardrobe with options for shelves, drawers, and lighting.",
-			BasePrice:              float64(700 + i*20),
-			BaseProductionTimeDays: 14 + (i%3)*7,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "MDF",
-			DefaultWidth:           120 + i*5, DefaultHeight: 200, DefaultDepth: 60,
-			IsMadeToOrder: true,
-		})
+	var allCats []ec.Category
+	if err := DB.Find(&allCats).Error; err != nil {
+		return err
 	}
-	for i := 1; i <= 8; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catShelves.ID,
-			Name:                   "Wall Shelf " + itoa(i),
-			ShortDescription:       "Minimal wall shelf",
-			LongDescription:        "Compact shelving for books and decor with concealed mounts.",
-			BasePrice:              float64(120 + i*10),
-			BaseProductionTimeDays: 7 + (i%2)*3,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "MDF",
-			DefaultWidth:           80 + i*5, DefaultHeight: 30, DefaultDepth: 25,
-			IsMadeToOrder: false,
-		})
-	}
-	for i := 1; i <= 9; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catBeds.ID,
-			Name:                   "Double Bed " + itoa(i),
-			ShortDescription:       "Comfortable bed",
-			LongDescription:        "Sturdy bed frame with optional storage and headboard.",
-			BasePrice:              float64(650 + i*30),
-			BaseProductionTimeDays: 21,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "Wood",
-			DefaultWidth:           160, DefaultHeight: 40, DefaultDepth: 200,
-			IsMadeToOrder: true,
-		})
-	}
-	for i := range products {
-		if err := DB.Create(&products[i]).Error; err != nil {
-			return err
+	for _, cat := range allCats {
+		prodCount := 8 + rand.Intn(3) // 8..10
+		for i := 1; i <= prodCount; i++ {
+			p := ec.Product{
+				CategoryID:             cat.ID,
+				Name:                   cat.Name + " Product " + itoa(i),
+				ShortDescription:       "Sample product for " + cat.Name,
+				LongDescription:        "Auto-generated seed product.",
+				BasePrice:              float64(100 + rand.Intn(900)),
+				BaseProductionTimeDays: 7 + rand.Intn(21),
+				ImageURL:               "https://via.placeholder.com/400x300",
+				BaseMaterial:           []string{"MDF", "Wood", "Metal"}[rand.Intn(3)],
+				DefaultWidth:           80 + rand.Intn(120),
+				DefaultHeight:          30 + rand.Intn(170),
+				DefaultDepth:           30 + rand.Intn(70),
+				IsMadeToOrder:          rand.Intn(2) == 0,
+			}
+			if err := DB.Create(&p).Error; err != nil {
+				return err
+			}
 		}
 	}
 
-	var a, b, c ec.Product
-	DB.Where("category_id = ?", catWardrobes.ID).First(&a)
-	DB.Where("category_id = ?", catShelves.ID).First(&b)
-	DB.Where("category_id = ?", catBeds.ID).First(&c)
-	opts := []ec.ProductOption{
-		{ProductID: a.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
-		{ProductID: a.ID, OptionType: "extra", OptionName: "LED Lighting", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
-		{ProductID: c.ID, OptionType: "extra", OptionName: "Mattress", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},
-		// Color options
-		{ProductID: a.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
-		{ProductID: a.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
-		{ProductID: a.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
-	}
-	for i := range opts {
-		if err := DB.Create(&opts[i]).Error; err != nil {
-			return err
+	// Attach a few options to first few products overall
+	var some []ec.Product
+	if err := DB.Limit(3).Find(&some).Error; err == nil && len(some) > 0 {
+		opts := []ec.ProductOption{
+			{ProductID: some[0].ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
+			{ProductID: some[0].ID, OptionType: "extra", OptionName: "LED Lighting", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
+		}
+		for i := range opts {
+			if err := DB.Create(&opts[i]).Error; err != nil {
+				return err
+			}
 		}
 	}
 

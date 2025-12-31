@@ -19,10 +19,11 @@ type ordersService struct {
 	users   storage.UserRepository
 	orders  storage.OrderRepository
 	product storage.ProductRepository
+	stock   storage.StockRepository
 }
 
-func NewOrdersService(users storage.UserRepository, orders storage.OrderRepository, product storage.ProductRepository) service.OrdersService {
-	return &ordersService{users: users, orders: orders, product: product}
+func NewOrdersService(users storage.UserRepository, orders storage.OrderRepository, product storage.ProductRepository, stock storage.StockRepository) service.OrdersService {
+	return &ordersService{users: users, orders: orders, product: product, stock: stock}
 }
 
 func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrderInput) (*eo.Order, error) {
@@ -81,6 +82,12 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			SelectedOptionsJSON:          MarshalSelectedOptions(it.Options),
 		})
 		total += line
+		if p.BaseMaterial != "" {
+			qty, _ := s.stock.FindByMaterial(ctx, p.BaseMaterial)
+			if qty < float64(it.Quantity) {
+				return nil, fmt.Errorf("insufficient stock for material %s", p.BaseMaterial)
+			}
+		}
 	}
 	order.TotalPrice = total
 	workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
