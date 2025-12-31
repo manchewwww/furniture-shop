@@ -7,6 +7,7 @@ import (
 	"time"
 
 	ec "furniture-shop/internal/entities/catalog"
+	ei "furniture-shop/internal/entities/inventory"
 	models "furniture-shop/internal/entities/user"
 )
 
@@ -97,6 +98,24 @@ func seedData() error {
 		return err
 	}
 	if err := DB.Create(&admin).Error; err != nil {
+		return err
+	}
+	upsertStock := func(material, unit string, qty float64) error {
+		var s ei.Stock
+		if err := DB.Where("material_name = ?", material).First(&s).Error; err != nil {
+			if err := DB.Create(&ei.Stock{MaterialName: material, Unit: unit, QuantityAvailable: qty}).Error; err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	if err := upsertStock("MDF", "pcs", 1000); err != nil {
+		return err
+	}
+	if err := upsertStock("Wood", "pcs", 1000); err != nil {
+		return err
+	}
+	if err := upsertStock("Metal", "pcs", 1000); err != nil {
 		return err
 	}
 	return nil

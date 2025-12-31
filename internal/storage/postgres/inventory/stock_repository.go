@@ -54,3 +54,11 @@ func (r *StockRepository) AdjustQuantity(ctx context.Context, material string, d
 	s.QuantityAvailable += delta
 	return r.db.WithContext(ctx).Save(&s).Error
 }
+
+func (r *StockRepository) List(ctx context.Context) ([]ei.Stock, error) {
+	var items []ei.Stock
+	if err := r.db.WithContext(ctx).Find(&items).Error; err != nil {
+		return nil, err
+	}
+	return items, nil
+}

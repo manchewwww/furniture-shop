@@ -82,11 +82,14 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			SelectedOptionsJSON:          MarshalSelectedOptions(it.Options),
 		})
 		total += line
-		if p.BaseMaterial != "" {
+		if !p.IsMadeToOrder && p.BaseMaterial != "" {
 			qty, _ := s.stock.FindByMaterial(ctx, p.BaseMaterial)
 			if qty < float64(it.Quantity) {
 				return nil, fmt.Errorf("insufficient stock for material %s", p.BaseMaterial)
 			}
+		}
+		for q := 0; q < it.Quantity; q++ {
+			_ = s.product.IncrementRecommendation(ctx, p.ID)
 		}
 	}
 	order.TotalPrice = total
