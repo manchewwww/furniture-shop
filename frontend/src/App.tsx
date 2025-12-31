@@ -31,10 +31,10 @@ export default function App() {
   const { isAuthenticated, user, logout } = useAuth();
   const { t, lang, setLang } = useI18n();
   const nav = useNavigate();
-  const { clear } = useCart();
+  const { clearLocal } = useCart();
   const handleLogout = async () => {
     try {
-      await clear();
+      await clearLocal();
     } catch {}
     logout();
     nav("/");

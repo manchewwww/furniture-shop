@@ -29,6 +29,7 @@ type CartCtxType = {
   increment: (productId: number) => Promise<void>;
   decrement: (productId: number) => Promise<void>;
   clear: () => Promise<void>;
+  clearLocal: () => Promise<void>;
 };
 
 const CartCtx = createContext<CartCtxType | undefined>(undefined);
@@ -50,20 +51,47 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!isAuthenticated) return;
       try {
         const server = await apiGet();
+        const serverItemsRaw: any[] = server.items || [];
         const serverItems: CartItem[] = await Promise.all(
-          (server.items || []).map(async (it: any) => ({
+          serverItemsRaw.map(async (it: any) => ({
             product: await fetchProduct(it.product_id),
             quantity: it.quantity,
             options: JSON.parse(it.selected_options_json || "[]"),
           }))
         );
-        if (items.length && serverItems.length === 0) {
-          const payload = items.map((it) => ({
+
+        if (items.length) {
+          const keyOf = (ci: CartItem) =>
+            `${ci.product.id}:${JSON.stringify(
+              (ci.options || []).slice().sort((a, b) => a.id - b.id)
+            )}`;
+          const map = new Map<string, CartItem>();
+          for (const it of serverItems) map.set(keyOf(it), { ...it });
+          for (const it of items) {
+            const k = keyOf(it);
+            if (map.has(k)) {
+              map.get(k)!.quantity += it.quantity;
+            } else {
+              map.set(k, { ...it });
+            }
+          }
+          const merged = Array.from(map.values());
+          // Persist merged to backend
+          const payload = merged.map((it) => ({
             product_id: it.product.id,
             quantity: it.quantity,
             options: it.options,
           }));
           await apiReplace(payload);
+          const refreshed = await apiGet();
+          const mergedHydrated: CartItem[] = await Promise.all(
+            (refreshed.items || []).map(async (it: any) => ({
+              product: await fetchProduct(it.product_id),
+              quantity: it.quantity,
+              options: JSON.parse(it.selected_options_json || "[]"),
+            }))
+          );
+          setItems(mergedHydrated);
         } else {
           setItems(serverItems);
         }
@@ -182,6 +210,9 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       },
       clear: async () => {
         if (isAuthenticated) await apiClear();
+        setItems([]);
+      },
+      clearLocal: async () => {
         setItems([]);
       },
     }),
