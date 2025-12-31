@@ -9,7 +9,6 @@ import (
 
 	"furniture-shop/internal/config"
 	ec "furniture-shop/internal/entities/catalog"
-	ei "furniture-shop/internal/entities/inventory"
 	eo "furniture-shop/internal/entities/orders"
 	eu "furniture-shop/internal/entities/user"
 )
@@ -57,7 +56,6 @@ func AutoMigrateAndSeed() error {
 		&eo.OrderItem{},
 		&eo.Cart{},
 		&eo.CartItem{},
-		&ei.Stock{},
 		&ec.RecommendationCounter{},
 	); err != nil {
 		return err
