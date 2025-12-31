@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"os"
+	"path/filepath"
+	"strings"
 	"time"
 
 	ec "furniture-shop/internal/entities/catalog"
@@ -11,6 +14,9 @@ import (
 )
 
 func seedData() error {
+	if strings.EqualFold(os.Getenv("SEED_RESET"), "true") {
+		_ = DB.Exec("TRUNCATE TABLE product_options, products, categories, departments, recommendation_counters, users RESTART IDENTITY CASCADE").Error
+	}
 	var count int64
 	if err := DB.Model(&ec.Department{}).Count(&count).Error; err != nil {
 		return err
@@ -100,7 +106,7 @@ func seedData() error {
 				LongDescription:        fmt.Sprintf("Quality %s crafted with durable finishes and clean lines.", cat.Name),
 				BasePrice:              float64(150 + rand.Intn(1200)),
 				BaseProductionTimeDays: 7 + rand.Intn(21),
-				ImageURL:               "",
+				ImageURL:               findUploadImage(cat.Name, i),
 				BaseMaterial:           mats[rand.Intn(len(mats))],
 				DefaultWidth:           60 + rand.Intn(140),
 				DefaultHeight:          35 + rand.Intn(180),
@@ -111,6 +117,9 @@ func seedData() error {
 			}
 		}
 	}
+
+	// helper to make URL-friendly file names for categories
+	// e.g. "Coffee Tables" -> "coffee-tables"
 
 	// Options for first 10 products
 	var some []ec.Product
@@ -137,4 +146,118 @@ func seedData() error {
 		return err
 	}
 	return nil
+}
+
+func slug(s string) string {
+	out := make([]rune, 0, len(s))
+	for _, r := range s {
+		switch {
+		case r >= 'A' && r <= 'Z':
+			out = append(out, r+('a'-'A'))
+		case (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9'):
+			out = append(out, r)
+		case r == ' ' || r == '_' || r == '-' || r == '/' || r == '+':
+			out = append(out, '-')
+		default:
+			// skip other symbols
+		}
+	}
+	res := make([]rune, 0, len(out))
+	var prevDash bool
+	for _, r := range out {
+		if r == '-' {
+			if !prevDash {
+				res = append(res, r)
+				prevDash = true
+			}
+		} else {
+			res = append(res, r)
+			prevDash = false
+		}
+	}
+	return string(res)
+}
+
+func findUploadImage(categoryName string, idx int) string {
+	baseSlug := slug(categoryName)
+	baseName := strings.TrimSpace(categoryName)
+	try := func(fn string) string {
+		p := filepath.Join("uploads", fn)
+		if _, err := os.Stat(p); err == nil {
+			return "/uploads/" + fn
+		}
+		return ""
+	}
+	exts := []string{"jpg", "jpeg", "png", "webp", "avif"}
+
+	aliasCandidates := []string{baseSlug}
+	rawLower := strings.ToLower(baseName)
+	aliasCandidates = append(aliasCandidates, strings.ReplaceAll(rawLower, " ", "-"))
+	aliasCandidates = append(aliasCandidates, rawLower)
+	if strings.HasSuffix(baseSlug, "s") {
+		aliasCandidates = append(aliasCandidates, strings.TrimSuffix(baseSlug, "s"))
+	}
+	if strings.HasSuffix(rawLower, "s") {
+		aliasCandidates = append(aliasCandidates, strings.TrimSuffix(strings.ReplaceAll(rawLower, " ", "-"), "s"))
+		aliasCandidates = append(aliasCandidates, strings.TrimSuffix(rawLower, "s"))
+	}
+	irregular := map[string][]string{
+		"mattresses": {"matters"},
+		"wardrobes":  {"wardrob", "wardrobe"},
+		"sofas":      {"sofa"},
+		"beds":       {"bed"},
+	}
+	if v, ok := irregular[strings.ToLower(baseName)]; ok {
+		aliasCandidates = append(aliasCandidates, v...)
+	}
+
+	for _, base := range aliasCandidates {
+		for _, ext := range exts {
+			if r := try(fmt.Sprintf("%s-%d.%s", base, idx, ext)); r != "" {
+				return r
+			}
+			if r := try(fmt.Sprintf("%s_%d.%s", base, idx, ext)); r != "" {
+				return r
+			}
+			if r := try(fmt.Sprintf("%s %d.%s", base, idx, ext)); r != "" {
+				return r
+			}
+		}
+	}
+
+	files, _ := os.ReadDir("uploads")
+	if len(files) > 0 {
+		norm := func(s string) string {
+			s = strings.ToLower(s)
+			b := strings.Builder{}
+			for _, r := range s {
+				if (r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r == '-' || r == ' ' || r == '_' {
+					b.WriteRune(r)
+				}
+			}
+			return b.String()
+		}
+		want := norm(baseSlug)
+		wantSing := strings.TrimSuffix(want, "s")
+		for _, f := range files {
+			if f.IsDir() {
+				continue
+			}
+			name := f.Name()
+			lower := strings.ToLower(name)
+			for _, ext := range exts {
+				suffixes := []string{fmt.Sprintf("-%d.%s", idx, ext), fmt.Sprintf("_%d.%s", idx, ext), fmt.Sprintf(" %d.%s", idx, ext)}
+				for _, suf := range suffixes {
+					if strings.HasSuffix(lower, suf) {
+						base := strings.TrimSuffix(lower, suf)
+						n := norm(base)
+						if strings.Contains(n, want) || strings.Contains(n, wantSing) || strings.HasPrefix(want, n) || strings.HasPrefix(n, want) {
+							return "/uploads/" + name
+						}
+					}
+				}
+			}
+		}
+	}
+	return ""
 }
