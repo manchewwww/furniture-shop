@@ -88,9 +88,6 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 				return nil, fmt.Errorf("insufficient stock for material %s", p.BaseMaterial)
 			}
 		}
-		for q := 0; q < it.Quantity; q++ {
-			_ = s.product.IncrementRecommendation(ctx, p.ID)
-		}
 	}
 	order.TotalPrice = total
 	workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
