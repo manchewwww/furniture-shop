@@ -237,6 +237,20 @@ const dict: Record<Lang, Record<string, string>> = {
   },
 };
 
+try {
+  Object.assign((dict as any).bg, {
+    "register.confirm_password": "Потвърди парола",
+    "register.success_login_prompt": "Успешна регистрация. Моля, влезте.",
+    "validation.required": "Това поле е задължително",
+    "validation.email": "Моля, въведете валиден имейл",
+    "validation.password_min": "Паролата трябва да е поне {n} символа",
+    "validation.min": "Трябва да е поне {n} символа",
+    "validation.password_complexity": "Паролата трябва да съдържа букви и цифри",
+    "validation.password_match": "Паролите не съвпадат",
+    "validation.phone": "Моля, въведете валиден телефон",
+  });
+} catch {}
+
 const I18nContext = createContext<I18nCtx | undefined>(undefined);
 
 export const I18nProvider: React.FC<{ children: React.ReactNode }> = ({
