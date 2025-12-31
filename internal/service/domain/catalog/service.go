@@ -31,7 +31,12 @@ func (s *catalogService) ListProductsByCategory(ctx context.Context, categoryID 
 }
 
 func (s *catalogService) GetProduct(ctx context.Context, id uint) (*ec.Product, error) {
-	return s.products.FindByID(ctx, id)
+	p, err := s.products.FindByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	_ = s.products.IncrementRecommendation(ctx, id)
+	return p, nil
 }
 
 func (s *catalogService) SearchProducts(ctx context.Context, query string, limit int) ([]ec.Product, error) {

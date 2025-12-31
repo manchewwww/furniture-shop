@@ -10,6 +10,7 @@ export default function AdminDepartments() {
   const nav = useNavigate();
   const [depts, setDepts] = useState<any[]>([]);
   const [openDept, setOpenDept] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const [deptForm] = Form.useForm();
 
   const load = async () => {
@@ -25,10 +26,15 @@ export default function AdminDepartments() {
     load();
   }, []);
 
-  const createDept = async () => {
+  const submitDept = async () => {
     const v = await deptForm.validateFields();
-    await api.post("/admin/departments", v);
+    if (editing) {
+      await api.put(`/admin/departments/${editing.id}`, v);
+    } else {
+      await api.post("/admin/departments", v);
+    }
     setOpenDept(false);
+    setEditing(null);
     deptForm.resetFields();
     load();
   };
@@ -52,13 +58,49 @@ export default function AdminDepartments() {
               title: t("department_description"),
               dataIndex: "description",
             },
+            {
+              title: t("actions"),
+              render: (_: any, r: any) => (
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setEditing(r);
+                      deptForm.setFieldsValue({
+                        name: r.name,
+                        description: r.description,
+                        image_url: r.image_url,
+                      });
+                      setOpenDept(true);
+                    }}
+                    style={{ marginRight: 8 }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    danger
+                    size="small"
+                    onClick={async () => {
+                      await api.delete(`/admin/departments/${r.id}`);
+                      load();
+                    }}
+                  >
+                    Delete
+                  </Button>
+                </>
+              ),
+            },
           ]}
         />
         <Modal
-          title={t("create_department")}
+          title={editing ? t("edit_department") : t("create_department")}
           open={openDept}
-          onOk={createDept}
-          onCancel={() => setOpenDept(false)}
+          onOk={submitDept}
+          onCancel={() => {
+            setOpenDept(false);
+            setEditing(null);
+            deptForm.resetFields();
+          }}
         >
           <Form layout="vertical" form={deptForm}>
             <Form.Item

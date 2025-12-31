@@ -47,10 +47,12 @@ func (r *ProductRepository) Search(ctx context.Context, query string, limit int)
 
 func (r *ProductRepository) ListRecommendations(ctx context.Context, p *ec.Product, limit int) ([]ec.Product, error) {
 	var rec []ec.Product
-	if err := r.db.WithContext(ctx).
-		Where("category_id = ? AND id <> ?", p.CategoryID, p.ID).
-		Limit(limit).
-		Find(&rec).Error; err != nil {
+	q := r.db.WithContext(ctx).Model(&ec.Product{}).
+		Joins("LEFT JOIN recommendation_counters rc ON rc.product_id = products.id").
+		Where("products.category_id = ? AND products.id <> ?", p.CategoryID, p.ID).
+		Order("COALESCE(rc.count,0) DESC, products.id ASC").
+		Limit(limit)
+	if err := q.Find(&rec).Error; err != nil {
 		return nil, err
 	}
 	return rec, nil
@@ -69,13 +71,32 @@ func (r *ProductRepository) Create(ctx context.Context, p *ec.Product) error {
 }
 
 func (r *ProductRepository) Update(ctx context.Context, id uint, p ec.Product) error {
-	// Use Select to explicitly specify which fields to update, avoiding zero-value issues
 	return r.db.WithContext(ctx).Model(&ec.Product{}).Where("id = ?", id).
 		Select("name", "short_description", "long_description", "base_price", "base_production_time_days", "category_id", "image_url",
-			"default_width", "default_height", "default_depth").
+			"default_width", "default_height", "default_depth", "base_material", "quantity").
 		Updates(p).Error
 }
 
 func (r *ProductRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&ec.Product{}, id).Error
+}
+
+func (r *ProductRepository) IncrementRecommendation(ctx context.Context, productID uint) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var rc ec.RecommendationCounter
+		if err := tx.Where("product_id = ?", productID).First(&rc).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				rc = ec.RecommendationCounter{ProductID: productID, Count: 1}
+				return tx.Create(&rc).Error
+			}
+			return err
+		}
+		return tx.Model(&rc).UpdateColumn("count", gorm.Expr("count + 1")).Error
+	})
+}
+
+func (r *ProductRepository) AdjustQuantity(ctx context.Context, productID uint, delta int) error {
+	return r.db.WithContext(ctx).Model(&ec.Product{}).
+		Where("id = ?", productID).
+		UpdateColumn("quantity", gorm.Expr("GREATEST(quantity + ?, 0)", delta)).Error
 }

@@ -7,6 +7,7 @@ import (
 	sc "furniture-shop/internal/service/domain/catalog"
 	so "furniture-shop/internal/service/domain/orders"
 	sp "furniture-shop/internal/service/domain/payments"
+	"furniture-shop/internal/service/mailer"
 	"furniture-shop/internal/storage"
 )
 
@@ -17,6 +18,7 @@ func NewService(repos *storage.Repository, jwtSecret string) *service.Service {
 		Catalog: sc.NewCatalogService(repos.Departments, repos.Categories, repos.Products),
 		Orders:  so.NewOrdersService(repos.Users, repos.Orders, repos.Products),
 		Admin:   sadm.NewAdminService(repos.Departments, repos.Categories, repos.Products, repos.ProductOptions),
-		Payment: sp.NewPaymentService(repos.Orders),
+		Payment: sp.NewPaymentService(repos.Orders, repos.Products, repos.Users, mailer.NewSender()),
+		Cart:    so.NewCartService(repos.Carts),
 	}
 }

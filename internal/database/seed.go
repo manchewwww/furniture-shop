@@ -19,11 +19,13 @@ func seedData() error {
 		return nil
 	}
 
-	log.Println("Seeding sample data...")
+	log.Println("Seeding furniture shop data (English)...")
 	depts := []ec.Department{
-		{Name: "Living Room", Description: "Furniture for living spaces", ImageURL: "https://via.placeholder.com/600x400?text=Living+Room"},
-		{Name: "Bedroom", Description: "Furniture for bedrooms", ImageURL: "https://via.placeholder.com/600x400?text=Bedroom"},
-		{Name: "Kitchen", Description: "Furniture for kitchens", ImageURL: "https://via.placeholder.com/600x400?text=Kitchen"},
+		{Name: "Living Room", Description: "Sofas, armchairs, coffee tables, TV units", ImageURL: ""},
+		{Name: "Bedroom", Description: "Beds, wardrobes, dressers, nightstands", ImageURL: ""},
+		{Name: "Dining", Description: "Dining tables, chairs, sideboards", ImageURL: ""},
+		{Name: "Home Office", Description: "Desks, office chairs, bookcases", ImageURL: ""},
+		{Name: "Outdoor", Description: "Garden tables, chairs, loungers", ImageURL: ""},
 	}
 	for i := range depts {
 		if err := DB.Create(&depts[i]).Error; err != nil {
@@ -31,18 +33,48 @@ func seedData() error {
 		}
 	}
 
-	var dLiving, dBedroom, dKitchen ec.Department
+	var dLiving, dBedroom, dDining, dOffice, dOutdoor ec.Department
 	DB.Where("name = ?", "Living Room").First(&dLiving)
 	DB.Where("name = ?", "Bedroom").First(&dBedroom)
-	DB.Where("name = ?", "Kitchen").First(&dKitchen)
+	DB.Where("name = ?", "Dining").First(&dDining)
+	DB.Where("name = ?", "Home Office").First(&dOffice)
+	DB.Where("name = ?", "Outdoor").First(&dOutdoor)
 
 	cats := []ec.Category{
-		{Name: "Shelves", Description: "Wall and standing shelves", DepartmentID: dLiving.ID},
-		{Name: "Storage Cabinets", Description: "Cabinets and sideboards", DepartmentID: dLiving.ID},
-		{Name: "Beds", Description: "Single and double beds", DepartmentID: dBedroom.ID},
-		{Name: "Wardrobes", Description: "Sliding and hinged wardrobes", DepartmentID: dBedroom.ID},
-		{Name: "Kitchen Cabinets", Description: "Base and wall units", DepartmentID: dKitchen.ID},
-		{Name: "Tables", Description: "Dining tables", DepartmentID: dKitchen.ID},
+		// Living Room (5)
+		{Name: "Sofas", Description: "Two- and three-seater sofas", DepartmentID: dLiving.ID},
+		{Name: "Armchairs", Description: "Comfortable lounge chairs", DepartmentID: dLiving.ID},
+		{Name: "Coffee Tables", Description: "Coffee & side tables", DepartmentID: dLiving.ID},
+		{Name: "TV Units", Description: "TV stands and media units", DepartmentID: dLiving.ID},
+		{Name: "Console Tables", Description: "Hall and console tables", DepartmentID: dLiving.ID},
+
+		// Bedroom (5)
+		{Name: "Beds", Description: "Beds and headboards", DepartmentID: dBedroom.ID},
+		{Name: "Wardrobes", Description: "Hinged and sliding wardrobes", DepartmentID: dBedroom.ID},
+		{Name: "Dressers", Description: "Dressers and chests of drawers", DepartmentID: dBedroom.ID},
+		{Name: "Nightstands", Description: "Bedside tables", DepartmentID: dBedroom.ID},
+		{Name: "Mattresses", Description: "Mattresses and toppers", DepartmentID: dBedroom.ID},
+
+		// Dining (5)
+		{Name: "Dining Tables", Description: "Tables for every space", DepartmentID: dDining.ID},
+		{Name: "Dining Chairs", Description: "Upholstered and wooden chairs", DepartmentID: dDining.ID},
+		{Name: "Sideboards", Description: "Storage for dining rooms", DepartmentID: dDining.ID},
+		{Name: "Bar Stools", Description: "Stools for bars and islands", DepartmentID: dDining.ID},
+		{Name: "Dining Benches", Description: "Benches for tables", DepartmentID: dDining.ID},
+
+		// Home Office (5)
+		{Name: "Desks", Description: "Work and study desks", DepartmentID: dOffice.ID},
+		{Name: "Office Chairs", Description: "Ergonomic seating", DepartmentID: dOffice.ID},
+		{Name: "Bookcases", Description: "Bookcases and shelving", DepartmentID: dOffice.ID},
+		{Name: "Filing Cabinets", Description: "Document storage", DepartmentID: dOffice.ID},
+		{Name: "Shelving Units", Description: "Open shelving", DepartmentID: dOffice.ID},
+
+		// Outdoor (5)
+		{Name: "Outdoor Tables", Description: "Garden and patio tables", DepartmentID: dOutdoor.ID},
+		{Name: "Outdoor Chairs", Description: "Chairs and loungers", DepartmentID: dOutdoor.ID},
+		{Name: "Loungers", Description: "Sun loungers", DepartmentID: dOutdoor.ID},
+		{Name: "Outdoor Sofas", Description: "Garden sofas and sets", DepartmentID: dOutdoor.ID},
+		{Name: "Parasols", Description: "Umbrellas and shades", DepartmentID: dOutdoor.ID},
 	}
 	for i := range cats {
 		if err := DB.Create(&cats[i]).Error; err != nil {
@@ -51,76 +83,49 @@ func seedData() error {
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	var catWardrobes, catShelves, catBeds ec.Category
-	DB.Where("name = ?", "Wardrobes").First(&catWardrobes)
-	DB.Where("name = ?", "Shelves").First(&catShelves)
-	DB.Where("name = ?", "Beds").First(&catBeds)
-
-	var products []ec.Product
-	for i := 1; i <= 10; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catWardrobes.ID,
-			Name:                   "Modular Wardrobe " + itoa(i),
-			ShortDescription:       "Modular wardrobe with customizable layout",
-			LongDescription:        "Configurable wardrobe with options for shelves, drawers, and lighting.",
-			BasePrice:              float64(700 + i*20),
-			BaseProductionTimeDays: 14 + (i%3)*7,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "MDF",
-			DefaultWidth:           120 + i*5, DefaultHeight: 200, DefaultDepth: 60,
-			IsMadeToOrder: true,
-		})
+	var allCats []ec.Category
+	if err := DB.Find(&allCats).Error; err != nil {
+		return err
 	}
-	for i := 1; i <= 8; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catShelves.ID,
-			Name:                   "Wall Shelf " + itoa(i),
-			ShortDescription:       "Minimal wall shelf",
-			LongDescription:        "Compact shelving for books and decor with concealed mounts.",
-			BasePrice:              float64(120 + i*10),
-			BaseProductionTimeDays: 7 + (i%2)*3,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "MDF",
-			DefaultWidth:           80 + i*5, DefaultHeight: 30, DefaultDepth: 25,
-			IsMadeToOrder: false,
-		})
-	}
-	for i := 1; i <= 9; i++ {
-		products = append(products, ec.Product{
-			CategoryID:             catBeds.ID,
-			Name:                   "Double Bed " + itoa(i),
-			ShortDescription:       "Comfortable bed",
-			LongDescription:        "Sturdy bed frame with optional storage and headboard.",
-			BasePrice:              float64(650 + i*30),
-			BaseProductionTimeDays: 21,
-			ImageURL:               "https://via.placeholder.com/400x300",
-			BaseMaterial:           "Wood",
-			DefaultWidth:           160, DefaultHeight: 40, DefaultDepth: 200,
-			IsMadeToOrder: true,
-		})
-	}
-	for i := range products {
-		if err := DB.Create(&products[i]).Error; err != nil {
-			return err
+	cityNames := []string{"Sofia", "Plovdiv", "Varna", "Burgas", "Ruse", "Stara Zagora", "Veliko Tarnovo", "Blagoevgrad"}
+	mats := []string{"MDF", "Wood", "Metal"}
+	for _, cat := range allCats {
+		for i := 1; i <= 10; i++ { // exactly 10 products per category
+			city := cityNames[rand.Intn(len(cityNames))]
+			name := fmt.Sprintf("%s %s %d", city, cat.Name, i)
+			p := ec.Product{
+				CategoryID:             cat.ID,
+				Name:                   name,
+				ShortDescription:       fmt.Sprintf("%s for modern homes", cat.Name),
+				LongDescription:        fmt.Sprintf("Quality %s crafted with durable finishes and clean lines.", cat.Name),
+				BasePrice:              float64(150 + rand.Intn(1200)),
+				BaseProductionTimeDays: 7 + rand.Intn(21),
+				ImageURL:               "",
+				BaseMaterial:           mats[rand.Intn(len(mats))],
+				DefaultWidth:           60 + rand.Intn(140),
+				DefaultHeight:          35 + rand.Intn(180),
+				DefaultDepth:           30 + rand.Intn(70),
+			}
+			if err := DB.Create(&p).Error; err != nil {
+				return err
+			}
 		}
 	}
 
-	var a, b, c ec.Product
-	DB.Where("category_id = ?", catWardrobes.ID).First(&a)
-	DB.Where("category_id = ?", catShelves.ID).First(&b)
-	DB.Where("category_id = ?", catBeds.ID).First(&c)
-	opts := []ec.ProductOption{
-		{ProductID: a.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 25, ProductionTimeModifierDays: 3},
-		{ProductID: a.ID, OptionType: "extra", OptionName: "LED Lighting", PriceModifierType: "absolute", PriceModifierValue: 90, ProductionTimeModifierDays: 2},
-		{ProductID: c.ID, OptionType: "extra", OptionName: "Mattress", PriceModifierType: "absolute", PriceModifierValue: 120, ProductionTimeModifierDays: 4},
-		// Color options
-		{ProductID: a.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
-		{ProductID: a.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
-		{ProductID: a.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
-	}
-	for i := range opts {
-		if err := DB.Create(&opts[i]).Error; err != nil {
-			return err
+	// Options for first 10 products
+	var some []ec.Product
+	if err := DB.Limit(10).Find(&some).Error; err == nil && len(some) > 0 {
+		for _, pr := range some {
+			opts := []ec.ProductOption{
+				{ProductID: pr.ID, OptionType: "color", OptionName: "White", PriceModifierType: "absolute", PriceModifierValue: 0},
+				{ProductID: pr.ID, OptionType: "color", OptionName: "Oak", PriceModifierType: "absolute", PriceModifierValue: 0},
+				{ProductID: pr.ID, OptionType: "color", OptionName: "Walnut", PriceModifierType: "absolute", PriceModifierValue: 0},
+				{ProductID: pr.ID, OptionType: "material", OptionName: "Solid Wood", PriceModifierType: "percent", PriceModifierValue: 20, ProductionTimeModifierDays: 3},
+				{ProductID: pr.ID, OptionType: "extra", OptionName: "Soft-Close Hinges", PriceModifierType: "absolute", PriceModifierValue: 35, ProductionTimeModifierDays: 1},
+			}
+			for i := range opts {
+				_ = DB.Create(&opts[i]).Error
+			}
 		}
 	}
 
@@ -133,5 +138,3 @@ func seedData() error {
 	}
 	return nil
 }
-
-func itoa(i int) string { return fmt.Sprintf("%d", i) }

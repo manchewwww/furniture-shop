@@ -61,6 +61,7 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 	order := &eo.Order{UserID: user.ID, Status: eo.OrderStatusNew, PaymentMethod: in.PaymentMethod, PaymentStatus: eo.PaymentStatusPending}
 	var items []eo.OrderItem
 	var total float64
+	allInStock := true
 	for _, it := range in.Items {
 		p, err := s.product.FindByID(ctx, it.ProductID)
 		if err != nil {
@@ -81,10 +82,24 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			SelectedOptionsJSON:          MarshalSelectedOptions(it.Options),
 		})
 		total += line
+		available := p.Quantity
+		if available < it.Quantity {
+			allInStock = false
+			if available > 0 {
+			}
+		} else {
+		}
+		for q := 0; q < it.Quantity; q++ {
+			_ = s.product.IncrementRecommendation(ctx, p.ID)
+		}
 	}
 	order.TotalPrice = total
-	workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
-	order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
+	if allInStock {
+		order.EstimatedProductionTimeDays = 1
+	} else {
+		workload, _ := s.orders.CountByStatus(ctx, eo.OrderStatusInProduction)
+		order.EstimatedProductionTimeDays = CalculateOrderProductionTimeWithWorkload(items, workload)
+	}
 	order.Items = items
 
 	if err := s.orders.CreateWithItems(ctx, order); err != nil {

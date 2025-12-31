@@ -18,5 +18,6 @@ func NewRepository(db *gorm.DB) *storage.Repository {
 		Products:       pgadmin.NewProductRepository(db),
 		ProductOptions: pgadmin.NewProductOptionRepository(db),
 		Orders:         pgorders.NewOrderRepository(db),
+		Carts:          pgorders.NewCartRepository(db),
 	}
 }

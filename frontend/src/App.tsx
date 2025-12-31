@@ -15,7 +15,7 @@ import AdminDepartments from "./pages/AdminDepartments";
 import AdminCategories from "./pages/AdminCategories";
 import AdminProducts from "./pages/AdminProducts";
 import AdminOrders from "./pages/AdminOrders";
-import { CartProvider } from "./store/CartContext";
+import { useCart } from "./store/CartContext";
 import { useAuth } from "./store/AuthContext";
 import { useI18n } from "./store/I18nContext";
 import {
@@ -31,126 +31,125 @@ export default function App() {
   const { isAuthenticated, user, logout } = useAuth();
   const { t, lang, setLang } = useI18n();
   const nav = useNavigate();
+  const { clearLocal } = useCart();
+  const handleLogout = async () => {
+    try {
+      await clearLocal();
+    } catch {}
+    logout();
+    nav("/");
+  };
   return (
-    <CartProvider>
-      <Layout style={{ minHeight: "100vh" }}>
-        <Header>
-          <Menu theme="dark" mode="horizontal" selectable={false}>
-            <Menu.Item key="home">
-              <Link to="/">{t("nav.home")}</Link>
-            </Menu.Item>
-            <Menu.Item key="catalog">
-              <Link to="/catalog">{t("nav.catalog")}</Link>
-            </Menu.Item>
-            <Menu.Item key="cart">
-              <Link to="/cart">{t("nav.cart")}</Link>
-            </Menu.Item>
-            {isAuthenticated ? (
-              <>
-                {user?.role !== "admin" && (
-                  <Menu.Item key="orders">
-                    <Link to="/orders">{t("nav.orders")}</Link>
-                  </Menu.Item>
-                )}
-                {user?.role === "admin" && (
-                  <Menu.Item key="admin">
-                    <Link to="/admin">{t("nav.admin")}</Link>
-                  </Menu.Item>
-                )}
-                <Menu.Item
-                  key="logout"
-                  style={{ marginLeft: "auto" }}
-                  onClick={() => {
-                    logout();
-                    nav("/");
-                  }}
-                >
-                  {t("nav.logout")}
+    <Layout style={{ minHeight: "100vh" }}>
+      <Header>
+        <Menu theme="dark" mode="horizontal" selectable={false}>
+          <Menu.Item key="home">
+            <Link to="/">{t("nav.home")}</Link>
+          </Menu.Item>
+          <Menu.Item key="catalog">
+            <Link to="/catalog">{t("nav.catalog")}</Link>
+          </Menu.Item>
+          <Menu.Item key="cart">
+            <Link to="/cart">{t("nav.cart")}</Link>
+          </Menu.Item>
+          {isAuthenticated ? (
+            <>
+              {user?.role !== "admin" && (
+                <Menu.Item key="orders">
+                  <Link to="/orders">{t("nav.orders")}</Link>
                 </Menu.Item>
-              </>
-            ) : (
-              <>
-                <Menu.Item key="login" style={{ marginLeft: "auto" }}>
-                  <Link to="/login">{t("nav.login")}</Link>
+              )}
+              {user?.role === "admin" && (
+                <Menu.Item key="admin">
+                  <Link to="/admin">{t("nav.admin")}</Link>
                 </Menu.Item>
-                <Menu.Item key="register">
-                  <Link to="/register">{t("nav.register")}</Link>
-                </Menu.Item>
-              </>
-            )}
-            <Menu.Item key="lang" style={{ marginLeft: 12 }}>
-              <Select
-                value={lang}
-                style={{ width: 140 }}
-                onChange={(v) => setLang(v as any)}
-                options={[
-                  { value: "en", label: "English" },
-                  { value: "bg", label: "Български" },
-                ]}
-              />
-            </Menu.Item>
-          </Menu>
-        </Header>
-        <Content style={{ padding: 24 }}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/catalog" element={<Catalog />} />
-            <Route path="/product/:id" element={<ProductDetails />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route
-              path="/checkout"
-              element={
-                <RequireAuth>
-                  <Checkout />
-                </RequireAuth>
-              }
+              )}
+              <Menu.Item
+                key="logout"
+                style={{ marginLeft: "auto" }}
+                onClick={handleLogout}
+              >
+                {t("nav.logout")}
+              </Menu.Item>
+            </>
+          ) : (
+            <>
+              <Menu.Item key="login" style={{ marginLeft: "auto" }}>
+                <Link to="/login">{t("nav.login")}</Link>
+              </Menu.Item>
+              <Menu.Item key="register">
+                <Link to="/register">{t("nav.register")}</Link>
+              </Menu.Item>
+            </>
+          )}
+          <Menu.Item key="lang" style={{ marginLeft: 12 }}>
+            <Select
+              value={lang}
+              style={{ width: 140 }}
+              onChange={(v) => setLang(v as any)}
+              options={[
+                { value: "en", label: "English" },
+                { value: "bg", label: "Български" },
+              ]}
             />
-            <Route path="/payment/success" element={<PaymentSuccess />} />
-            <Route path="/payment/cancel" element={<PaymentCancel />} />
-            <Route
-              path="/login"
-              element={
-                <ForbidAuth>
-                  <Login />
-                </ForbidAuth>
-              }
-            />
-            <Route
-              path="/register"
-              element={
-                <ForbidAuth>
-                  <Register />
-                </ForbidAuth>
-              }
-            />
-            <Route
-              path="/orders"
-              element={
-                <RequireAuth>
-                  <ForbidRole role="admin">
-                    <Orders />
-                  </ForbidRole>
-                </RequireAuth>
-              }
-            />
-            <Route
-              path="/admin"
-              element={
-                <RequireRole role="admin">{<AdminLayout />}</RequireRole>
-              }
-            >
-              <Route index element={<Navigate to="products" replace />} />
-              <Route path="departments" element={<AdminDepartments />} />
-              <Route path="categories" element={<AdminCategories />} />
-              <Route path="products" element={<AdminProducts />} />
-              <Route path="orders" element={<AdminOrders />} />
-            </Route>
-          </Routes>
-        </Content>
-        <Footer style={{ textAlign: "center" }}>
-          Магазин за мебели © 2025
-        </Footer>
-      </Layout>
-    </CartProvider>
+          </Menu.Item>
+        </Menu>
+      </Header>
+      <Content style={{ padding: 24 }}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/product/:id" element={<ProductDetails />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth>
+                <Checkout />
+              </RequireAuth>
+            }
+          />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+          <Route
+            path="/login"
+            element={
+              <ForbidAuth>
+                <Login />
+              </ForbidAuth>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <ForbidAuth>
+                <Register />
+              </ForbidAuth>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <RequireAuth>
+                <ForbidRole role="admin">
+                  <Orders />
+                </ForbidRole>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/admin"
+            element={<RequireRole role="admin">{<AdminLayout />}</RequireRole>}
+          >
+            <Route index element={<Navigate to="products" replace />} />
+            <Route path="departments" element={<AdminDepartments />} />
+            <Route path="categories" element={<AdminCategories />} />
+            <Route path="products" element={<AdminProducts />} />
+            <Route path="orders" element={<AdminOrders />} />
+          </Route>
+        </Routes>
+      </Content>
+      <Footer style={{ textAlign: "center" }}>Магазин за мебели © 2025</Footer>
+    </Layout>
   );
 }

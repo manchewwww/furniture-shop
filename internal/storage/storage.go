@@ -23,6 +23,7 @@ type DepartmentRepository interface {
 	Delete(ctx context.Context, id uint) error
 }
 
+// Category
 type CategoryRepository interface {
 	ListByDepartment(ctx context.Context, departmentID uint) ([]ec.Category, error)
 	ListAll(ctx context.Context) ([]ec.Category, error)
@@ -36,10 +37,22 @@ type ProductRepository interface {
 	FindByID(ctx context.Context, id uint) (*ec.Product, error)
 	Search(ctx context.Context, query string, limit int) ([]ec.Product, error)
 	ListRecommendations(ctx context.Context, p *ec.Product, limit int) ([]ec.Product, error)
+	IncrementRecommendation(ctx context.Context, productID uint) error
 	ListAll(ctx context.Context) ([]ec.Product, error)
 	Create(ctx context.Context, p *ec.Product) error
 	Update(ctx context.Context, id uint, p ec.Product) error
 	Delete(ctx context.Context, id uint) error
+	AdjustQuantity(ctx context.Context, productID uint, delta int) error
+}
+
+// Cart persistence
+type CartRepository interface {
+	GetOrCreateByUser(ctx context.Context, userID uint) (*eo.Cart, error)
+	ReplaceItems(ctx context.Context, userID uint, items []eo.CartItem) (*eo.Cart, error)
+	AddItem(ctx context.Context, userID uint, item *eo.CartItem) (*eo.CartItem, error)
+	UpdateItem(ctx context.Context, userID uint, itemID uint, item eo.CartItem) error
+	RemoveItem(ctx context.Context, userID uint, itemID uint) error
+	Clear(ctx context.Context, userID uint) error
 }
 
 type ProductOptionRepository interface {
@@ -69,4 +82,5 @@ type Repository struct {
 	Products       ProductRepository
 	ProductOptions ProductOptionRepository
 	Orders         OrderRepository
+	Carts          CartRepository
 }

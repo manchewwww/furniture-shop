@@ -20,6 +20,7 @@ export default function AdminCategories() {
   const [depts, setDepts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [openCategory, setOpenCategory] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
   const [categoryForm] = Form.useForm();
 
   const load = async () => {
@@ -39,10 +40,15 @@ export default function AdminCategories() {
     load();
   }, []);
 
-  const createCategory = async () => {
+  const submitCategory = async () => {
     const v = await categoryForm.validateFields();
-    await api.post("/admin/categories", v);
+    if (editing) {
+      await api.put(`/admin/categories/${editing.id}`, v);
+    } else {
+      await api.post("/admin/categories", v);
+    }
     setOpenCategory(false);
+    setEditing(null);
     categoryForm.resetFields();
     load();
   };
@@ -73,26 +79,47 @@ export default function AdminCategories() {
             {
               title: t("actions"),
               render: (_: any, r: any) => (
-                <Popconfirm
-                  title="Delete category?"
-                  onConfirm={async () => {
-                    await api.delete(`/admin/categories/${r.id}`);
-                    load();
-                  }}
-                >
-                  <Button danger size="small">
-                    Delete
+                <>
+                  <Button
+                    size="small"
+                    onClick={() => {
+                      setEditing(r);
+                      categoryForm.setFieldsValue({
+                        department_id: r.department_id,
+                        name: r.name,
+                        description: r.description,
+                      });
+                      setOpenCategory(true);
+                    }}
+                    style={{ marginRight: 8 }}
+                  >
+                    Edit
                   </Button>
-                </Popconfirm>
+                  <Popconfirm
+                    title="Delete category?"
+                    onConfirm={async () => {
+                      await api.delete(`/admin/categories/${r.id}`);
+                      load();
+                    }}
+                  >
+                    <Button danger size="small">
+                      Delete
+                    </Button>
+                  </Popconfirm>
+                </>
               ),
             },
           ]}
         />
         <Modal
-          title={t("create_category")}
+          title={editing ? t("edit_category") : t("create_category")}
           open={openCategory}
-          onOk={createCategory}
-          onCancel={() => setOpenCategory(false)}
+          onOk={submitCategory}
+          onCancel={() => {
+            setOpenCategory(false);
+            setEditing(null);
+            categoryForm.resetFields();
+          }}
         >
           <Form layout="vertical" form={categoryForm}>
             <Form.Item

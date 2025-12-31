@@ -93,7 +93,6 @@ export default function Orders() {
     };
   }, [t]);
 
-  // Auto-expand order passed via query param `open`
   useEffect(() => {
     if (!openId) return;
     const exists = orders.some((o) => Number(o.id) === Number(openId));
