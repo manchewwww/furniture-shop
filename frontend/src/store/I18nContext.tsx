@@ -71,6 +71,16 @@ const dict: Record<Lang, Record<string, string>> = {
     "register.submit": "Register",
     "register.success": "Registered successfully",
     "register.error": "Registration failed",
+    "register.confirm_password": "Confirm Password",
+    "register.success_login_prompt": "Registration successful. Please log in.",
+
+    "validation.required": "This field is required",
+    "validation.email": "Please enter a valid email",
+    "validation.password_min": "Password must be at least {n} characters",
+    "validation.min": "Must be at least {n} characters",
+    "validation.password_complexity": "Password must include letters and numbers",
+    "validation.password_match": "Passwords do not match",
+    "validation.phone": "Please enter a valid phone number",
 
     "orders.title": "My Orders",
     "orders.error": "Please log in to view your orders",
@@ -249,4 +259,3 @@ export const useI18n = () => {
   if (!ctx) throw new Error("I18nProvider is missing");
   return ctx;
 };
-

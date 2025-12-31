@@ -15,7 +15,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 import { myOrder, myOrders, payOrder } from "../api/orders";
 import { fetchProduct } from "../api/catalog";
@@ -56,6 +56,9 @@ type Product = {
 
 export default function Orders() {
   const { t } = useI18n();
+  const [sp] = useSearchParams();
+  const openParam = sp.get("open");
+  const openId = useMemo(() => Number(openParam || 0) || 0, [openParam]);
 
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [detailsById, setDetailsById] = useState<
@@ -68,6 +71,7 @@ export default function Orders() {
 
   const inFlightDetails = useRef<Set<number>>(new Set());
   const inFlightProducts = useRef<Set<number>>(new Set());
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
 
   const apiOrigin = useMemo(() => {
     try {
@@ -88,6 +92,16 @@ export default function Orders() {
       alive = false;
     };
   }, [t]);
+
+  // Auto-expand order passed via query param `open`
+  useEffect(() => {
+    if (!openId) return;
+    const exists = orders.some((o) => Number(o.id) === Number(openId));
+    if (exists) {
+      setExpandedRowKeys([openId]);
+      loadDetails(openId);
+    }
+  }, [openId, orders]);
 
   const startPayment = useCallback(async (orderId: number) => {
     try {
@@ -305,6 +319,11 @@ export default function Orders() {
   const onExpand = useCallback(
     (expanded: boolean, record: OrderRow) => {
       if (expanded) loadDetails(record.id);
+      setExpandedRowKeys((prev) => {
+        const key = record.id as unknown as React.Key;
+        if (expanded) return [key];
+        return prev.filter((k) => k !== key);
+      });
     },
     [loadDetails]
   );
@@ -320,6 +339,7 @@ export default function Orders() {
         expandable={{
           onExpand,
           expandedRowRender,
+          expandedRowKeys,
         }}
       />
     </div>
