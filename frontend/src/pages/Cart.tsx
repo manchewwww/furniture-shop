@@ -2,7 +2,7 @@ import { Button, Card, Empty, Row, Col, Space, Table, Typography } from "antd";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../store/CartContext";
 import { useI18n } from "../store/I18nContext";
-import { api } from "../api/client";
+import { getApiOrigin } from "../api/client";
 
 function unitPrice(product: any, selected: { id: number; type: string }[]) {
   let price = Number(product.base_price || 0);
@@ -75,13 +75,7 @@ export default function Cart() {
                 {
                   title: "Product",
                   render: (_: any, it: any) => {
-                    const origin = (() => {
-                      try {
-                        return new URL(api.defaults.baseURL as string).origin;
-                      } catch {
-                        return "";
-                      }
-                    })();
+                    const origin = getApiOrigin();
                     const img =
                       it.product.image_url &&
                       !/^https?:/i.test(it.product.image_url)

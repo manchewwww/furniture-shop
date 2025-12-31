@@ -7,7 +7,7 @@ import {
 } from "../api/catalog";
 import { Link, useSearchParams } from "react-router-dom";
 import { useI18n } from "../store/I18nContext";
-import { api } from "../api/client";
+import { getApiOrigin } from "../api/client";
 
 export default function Catalog() {
   const [depts, setDepts] = useState<any[]>([]);
@@ -62,13 +62,7 @@ export default function Catalog() {
       {!deptId && (
         <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
           {depts.map((d) => {
-            const origin = (() => {
-              try {
-                return new URL(api.defaults.baseURL as string).origin;
-              } catch {
-                return "";
-              }
-            })();
+            const origin = getApiOrigin();
             const img =
               d.image_url && !/^https?:/i.test(d.image_url)
                 ? origin + d.image_url
@@ -121,13 +115,7 @@ export default function Catalog() {
       )}
       <Row gutter={[16, 16]}>
         {products.map((p) => {
-          const origin = (() => {
-            try {
-              return new URL(api.defaults.baseURL as string).origin;
-            } catch {
-              return "";
-            }
-          })();
+          const origin = getApiOrigin();
           const img =
             p.image_url && !/^https?:/i.test(p.image_url)
               ? origin + p.image_url

@@ -35,25 +35,25 @@ func LoadEnvFile() error {
 	if stripeWebhookSecret == "" {
 		return fmt.Errorf("STRIPE_WEBHOOK_SECRET is required")
 	}
-	emailSenderHost := os.Getenv("SMTP_HOST")
+	emailSenderHost := os.Getenv("EMAIL_SENDER_HOST")
 	if emailSenderHost == "" {
-		return fmt.Errorf("SMTP_HOST is required")
+		return fmt.Errorf("EMAIL_SENDER_HOST is required")
 	}
-	emailSenderPort := os.Getenv("SMTP_PORT")
+	emailSenderPort := os.Getenv("EMAIL_SENDER_PORT")
 	if emailSenderPort == "" {
-		return fmt.Errorf("SMTP_PORT is required")
+		return fmt.Errorf("EMAIL_SENDER_PORT is required")
 	}
-	emailSenderUser := os.Getenv("SMTP_USER")
+	emailSenderUser := os.Getenv("EMAIL_SENDER_USER")
 	if emailSenderUser == "" {
-		return fmt.Errorf("SMTP_USER is required")
+		return fmt.Errorf("EMAIL_SENDER_USER is required")
 	}
-	emailSenderPass := os.Getenv("SMTP_PASS")
+	emailSenderPass := os.Getenv("EMAIL_SENDER_PASS")
 	if emailSenderPass == "" {
-		return fmt.Errorf("SMTP_PASS is required")
+		return fmt.Errorf("EMAIL_SENDER_PASS is required")
 	}
-	emailSenderFrom := os.Getenv("FROM_EMAIL")
+	emailSenderFrom := os.Getenv("EMAIL_SENDER_FROM")
 	if emailSenderFrom == "" {
-		return fmt.Errorf("FROM_EMAIL is required")
+		return fmt.Errorf("EMAIL_SENDER_FROM is required")
 	}
 
 	Env = EnvConfig{
@@ -62,6 +62,11 @@ func LoadEnvFile() error {
 		JWTSecret:           jwtSecret,
 		StripeSecretKey:     stripeSecretKey,
 		StripeWebhookSecret: stripeWebhookSecret,
+		EmailSenderHost:     emailSenderHost,
+		EmailSenderPort:     emailSenderPort,
+		EmailSenderUser:     emailSenderUser,
+		EmailSenderPass:     emailSenderPass,
+		EmailSenderFrom:     emailSenderFrom,
 	}
 
 	return nil

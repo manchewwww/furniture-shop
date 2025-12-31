@@ -14,6 +14,7 @@ import {
   replaceCart as apiReplace,
   updateItem as apiUpdate,
 } from "../api/cart";
+import { fetchProduct } from "../api/catalog";
 
 export type CartItem = {
   product: any;
@@ -49,11 +50,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!isAuthenticated) return;
       try {
         const server = await apiGet();
-        const serverItems: CartItem[] = (server.items || []).map((it: any) => ({
-          product: { id: it.product_id },
-          quantity: it.quantity,
-          options: JSON.parse(it.selected_options_json || "[]"),
-        }));
+        const serverItems: CartItem[] = await Promise.all(
+          (server.items || []).map(async (it: any) => ({
+            product: await fetchProduct(it.product_id),
+            quantity: it.quantity,
+            options: JSON.parse(it.selected_options_json || "[]"),
+          }))
+        );
         if (items.length && serverItems.length === 0) {
           const payload = items.map((it) => ({
             product_id: it.product.id,
@@ -79,11 +82,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             options: item.options,
           });
           const s = await apiGet();
-          const mapped: CartItem[] = (s.items || []).map((it: any) => ({
-            product: { id: it.product_id },
-            quantity: it.quantity,
-            options: JSON.parse(it.selected_options_json || "[]"),
-          }));
+          const mapped: CartItem[] = await Promise.all(
+            (s.items || []).map(async (it: any) => ({
+              product: await fetchProduct(it.product_id),
+              quantity: it.quantity,
+              options: JSON.parse(it.selected_options_json || "[]"),
+            }))
+          );
           setItems(mapped);
         } else {
           setItems((prev) => {
@@ -105,11 +110,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           const found = (s.items || []).find((i: any) => i.product_id === id);
           if (found) await apiRemove(found.id);
           const ref = await apiGet();
-          const mapped: CartItem[] = (ref.items || []).map((it: any) => ({
-            product: { id: it.product_id },
-            quantity: it.quantity,
-            options: JSON.parse(it.selected_options_json || "[]"),
-          }));
+          const mapped: CartItem[] = await Promise.all(
+            (ref.items || []).map(async (it: any) => ({
+              product: await fetchProduct(it.product_id),
+              quantity: it.quantity,
+              options: JSON.parse(it.selected_options_json || "[]"),
+            }))
+          );
           setItems(mapped);
         } else {
           setItems((prev) => prev.filter((p) => p.product.id !== id));
@@ -125,11 +132,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
               options: JSON.parse(found.selected_options_json || "[]"),
             });
           const ref = await apiGet();
-          const mapped: CartItem[] = (ref.items || []).map((it: any) => ({
-            product: { id: it.product_id },
-            quantity: it.quantity,
-            options: JSON.parse(it.selected_options_json || "[]"),
-          }));
+          const mapped: CartItem[] = await Promise.all(
+            (ref.items || []).map(async (it: any) => ({
+              product: await fetchProduct(it.product_id),
+              quantity: it.quantity,
+              options: JSON.parse(it.selected_options_json || "[]"),
+            }))
+          );
           setItems(mapped);
         } else {
           setItems((prev) =>

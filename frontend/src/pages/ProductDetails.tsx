@@ -13,7 +13,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchProduct, fetchRecommendations } from "../api/catalog";
 import { useCart } from "../store/CartContext";
 import { useI18n } from "../store/I18nContext";
-import { api } from "../api/client";
+import { getApiOrigin } from "../api/client";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -43,13 +43,7 @@ export default function ProductDetails() {
           }}
         >
           {(() => {
-            const origin = (() => {
-              try {
-                return new URL(api.defaults.baseURL as string).origin;
-              } catch {
-                return "";
-              }
-            })();
+            const origin = getApiOrigin();
             const img =
               product.image_url && !/^https?:/i.test(product.image_url)
                 ? origin + product.image_url
@@ -133,13 +127,7 @@ export default function ProductDetails() {
           </Typography.Title>
           <Row gutter={[16, 16]} justify="start">
             {rec.map((r) => {
-              const origin = (() => {
-                try {
-                  return new URL(api.defaults.baseURL as string).origin;
-                } catch {
-                  return "";
-                }
-              })();
+              const origin = getApiOrigin();
               const rimg =
                 r.image_url && !/^https?:/i.test(r.image_url)
                   ? origin + r.image_url
