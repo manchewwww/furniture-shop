@@ -4,7 +4,6 @@ import (
 	"context"
 
 	ec "furniture-shop/internal/entities/catalog"
-	ei "furniture-shop/internal/entities/inventory"
 	eo "furniture-shop/internal/entities/orders"
 	eu "furniture-shop/internal/entities/user"
 )
@@ -46,14 +45,6 @@ type ProductRepository interface {
 	AdjustQuantity(ctx context.Context, productID uint, delta int) error
 }
 
-// Inventory / Stock
-type StockRepository interface {
-	FindByMaterial(ctx context.Context, material string) (float64, error)
-	UpsertMaterial(ctx context.Context, material string, qty float64, unit string) error
-	AdjustQuantity(ctx context.Context, material string, delta float64) error
-	List(ctx context.Context) ([]ei.Stock, error)
-}
-
 // Cart persistence
 type CartRepository interface {
 	GetOrCreateByUser(ctx context.Context, userID uint) (*eo.Cart, error)
@@ -91,6 +82,5 @@ type Repository struct {
 	Products       ProductRepository
 	ProductOptions ProductOptionRepository
 	Orders         OrderRepository
-	Stock          StockRepository
 	Carts          CartRepository
 }

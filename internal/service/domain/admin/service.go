@@ -4,7 +4,6 @@ import (
 	"context"
 
 	ec "furniture-shop/internal/entities/catalog"
-	ei "furniture-shop/internal/entities/inventory"
 	"furniture-shop/internal/service"
 	"furniture-shop/internal/storage"
 )
@@ -14,11 +13,10 @@ type adminService struct {
 	cats    storage.CategoryRepository
 	prods   storage.ProductRepository
 	options storage.ProductOptionRepository
-	stocks  storage.StockRepository
 }
 
-func NewAdminService(depts storage.DepartmentRepository, cats storage.CategoryRepository, prods storage.ProductRepository, options storage.ProductOptionRepository, stocks storage.StockRepository) service.AdminService {
-	return &adminService{depts: depts, cats: cats, prods: prods, options: options, stocks: stocks}
+func NewAdminService(depts storage.DepartmentRepository, cats storage.CategoryRepository, prods storage.ProductRepository, options storage.ProductOptionRepository) service.AdminService {
+	return &adminService{depts: depts, cats: cats, prods: prods, options: options}
 }
 
 func (s *adminService) ListDepartments(ctx context.Context) ([]ec.Department, error) {
@@ -83,12 +81,4 @@ func (s *adminService) UpdateProductOption(ctx context.Context, id uint, o ec.Pr
 
 func (s *adminService) DeleteProductOption(ctx context.Context, id uint) error {
 	return s.options.Delete(ctx, id)
-}
-
-func (s *adminService) ListStock(ctx context.Context) ([]ei.Stock, error) {
-	return s.stocks.List(ctx)
-}
-
-func (s *adminService) UpsertStock(ctx context.Context, material string, qty float64, unit string) error {
-	return s.stocks.UpsertMaterial(ctx, material, qty, unit)
 }

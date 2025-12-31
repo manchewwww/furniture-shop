@@ -13,13 +13,12 @@ import (
 type paymentService struct {
 	orders   storage.OrderRepository
 	products storage.ProductRepository
-	stock    storage.StockRepository
 	users    storage.UserRepository
 	mailer   mailer.Sender
 }
 
-func NewPaymentService(orders storage.OrderRepository, products storage.ProductRepository, stock storage.StockRepository, users storage.UserRepository, m mailer.Sender) service.PaymentService {
-	return &paymentService{orders: orders, products: products, stock: stock, users: users, mailer: m}
+func NewPaymentService(orders storage.OrderRepository, products storage.ProductRepository, users storage.UserRepository, m mailer.Sender) service.PaymentService {
+	return &paymentService{orders: orders, products: products, users: users, mailer: m}
 }
 
 func (s *paymentService) ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error {

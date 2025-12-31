@@ -19,11 +19,10 @@ type ordersService struct {
 	users   storage.UserRepository
 	orders  storage.OrderRepository
 	product storage.ProductRepository
-	stock   storage.StockRepository
 }
 
-func NewOrdersService(users storage.UserRepository, orders storage.OrderRepository, product storage.ProductRepository, stock storage.StockRepository) service.OrdersService {
-	return &ordersService{users: users, orders: orders, product: product, stock: stock}
+func NewOrdersService(users storage.UserRepository, orders storage.OrderRepository, product storage.ProductRepository) service.OrdersService {
+	return &ordersService{users: users, orders: orders, product: product}
 }
 
 func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrderInput) (*eo.Order, error) {
@@ -87,15 +86,12 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 		if available < it.Quantity {
 			allInStock = false
 			if available > 0 {
-				_ = s.product.AdjustQuantity(ctx, p.ID, -available)
 			}
 		} else {
-			_ = s.product.AdjustQuantity(ctx, p.ID, -it.Quantity)
 		}
 		for q := 0; q < it.Quantity; q++ {
 			_ = s.product.IncrementRecommendation(ctx, p.ID)
 		}
-		_ = s.product.AdjustQuantity(ctx, p.ID, -it.Quantity)
 	}
 	order.TotalPrice = total
 	if allInStock {

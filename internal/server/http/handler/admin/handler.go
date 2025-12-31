@@ -352,29 +352,3 @@ func (h *Handler) UploadImage() fiber.Handler {
 		return c.JSON(fiber.Map{"url": "/uploads/" + name})
 	}
 }
-
-func (h *Handler) ListStock() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		items, err := h.svc.ListStock(c.Context())
-		if err != nil {
-			return c.Status(500).JSON(fiber.Map{"message": "server error"})
-		}
-		return c.JSON(items)
-	}
-}
-
-func (h *Handler) UpsertStock() fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		var in admin_dto.StockDTO
-		if err := c.BodyParser(&in); err != nil {
-			return c.Status(400).JSON(fiber.Map{"message": "invalid request"})
-		}
-		if err := vld.ValidateStruct(in); err != nil {
-			return err
-		}
-		if err := h.svc.UpsertStock(c.Context(), in.MaterialName, in.QuantityAvailable, "pcs"); err != nil {
-			return c.Status(500).JSON(fiber.Map{"message": "server error"})
-		}
-		return c.JSON(fiber.Map{"message": "ok"})
-	}
-}

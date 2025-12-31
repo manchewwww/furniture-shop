@@ -475,12 +475,6 @@ export default function AdminProducts() {
             <Form.Item name="base_material" label="Base Material">
               <Input placeholder="e.g., MDF, Wood, Metal" />
             </Form.Item>
-
-            <Form.Item label="Initial Stock (optional)">
-              <Form.Item name="stock_quantity" style={{ marginBottom: 0 }}>
-                <InputNumber min={0} placeholder="Quantity" />
-              </Form.Item>
-            </Form.Item>
             <Form.Item label="Extras">
               <Select
                 mode="tags"

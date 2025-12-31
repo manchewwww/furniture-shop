@@ -6,7 +6,6 @@ import (
 	"furniture-shop/internal/dtos/cart"
 	order_dto "furniture-shop/internal/dtos/orders"
 	ec "furniture-shop/internal/entities/catalog"
-	ei "furniture-shop/internal/entities/inventory"
 	eo "furniture-shop/internal/entities/orders"
 	eu "furniture-shop/internal/entities/user"
 )
@@ -51,8 +50,6 @@ type AdminService interface {
 	CreateProductOption(ctx context.Context, o *ec.ProductOption) error
 	UpdateProductOption(ctx context.Context, id uint, o ec.ProductOption) error
 	DeleteProductOption(ctx context.Context, id uint) error
-	ListStock(ctx context.Context) ([]ei.Stock, error)
-	UpsertStock(ctx context.Context, material string, qty float64, unit string) error
 }
 
 type PaymentService interface {
