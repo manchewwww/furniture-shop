@@ -95,6 +95,8 @@ export default function AdminProducts() {
       default_width: v.default_width,
       default_height: v.default_height,
       default_depth: v.default_depth,
+      base_material: v.base_material,
+      stock_quantity: v.stock_quantity ?? 0,
     };
     if (editing) {
       await api.put(`/admin/products/${editing.id}`, payload);
@@ -282,6 +284,7 @@ export default function AdminProducts() {
                         default_width: r.default_width,
                         default_height: r.default_height,
                         default_depth: r.default_depth,
+                        base_material: r.base_material,
                       });
                       setImagePreview(imageVal || null);
                       api
@@ -459,6 +462,15 @@ export default function AdminProducts() {
                 tokenSeparators={[",", " ", ";"]}
                 allowClear
               />
+            </Form.Item>
+            <Form.Item name="base_material" label="Base Material">
+              <Input placeholder="e.g., MDF, Wood, Metal" />
+            </Form.Item>
+
+            <Form.Item label="Initial Stock (optional)">
+              <Form.Item name="stock_quantity" style={{ marginBottom: 0 }}>
+                <InputNumber min={0} placeholder="Quantity" />
+              </Form.Item>
             </Form.Item>
             <Form.Item label="Extras">
               <Select

@@ -57,7 +57,7 @@ func seedData() error {
 		return err
 	}
 	for _, cat := range allCats {
-		prodCount := 8 + rand.Intn(3) // 8..10
+		prodCount := 8 + rand.Intn(3)
 		for i := 1; i <= prodCount; i++ {
 			p := ec.Product{
 				CategoryID:             cat.ID,
@@ -71,7 +71,6 @@ func seedData() error {
 				DefaultWidth:           80 + rand.Intn(120),
 				DefaultHeight:          30 + rand.Intn(170),
 				DefaultDepth:           30 + rand.Intn(70),
-				IsMadeToOrder:          rand.Intn(2) == 0,
 			}
 			if err := DB.Create(&p).Error; err != nil {
 				return err
@@ -79,7 +78,6 @@ func seedData() error {
 		}
 	}
 
-	// Attach a few options to first few products overall
 	var some []ec.Product
 	if err := DB.Limit(3).Find(&some).Error; err == nil && len(some) > 0 {
 		opts := []ec.ProductOption{

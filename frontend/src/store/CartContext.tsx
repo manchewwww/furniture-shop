@@ -64,7 +64,6 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
           }))
         );
 
-        // Merge only with guest snapshot from localStorage
         const guestRaw = localStorage.getItem("cart");
         const guestItems: CartItem[] = guestRaw ? JSON.parse(guestRaw) : [];
         if (guestItems.length) {
@@ -83,14 +82,12 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
             }
           }
           const merged = Array.from(map.values());
-          // Persist merged to backend
           const payload = merged.map((it) => ({
             product_id: it.product.id,
             quantity: it.quantity,
             options: it.options,
           }));
           await apiReplace(payload);
-          // Clear guest snapshot so future refreshes don't re-merge
           localStorage.setItem("cart", JSON.stringify([]));
           const refreshed = await apiGet();
           const mergedHydrated: CartItem[] = await Promise.all(

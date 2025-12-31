@@ -71,10 +71,9 @@ func (r *ProductRepository) Create(ctx context.Context, p *ec.Product) error {
 }
 
 func (r *ProductRepository) Update(ctx context.Context, id uint, p ec.Product) error {
-	// Use Select to explicitly specify which fields to update, avoiding zero-value issues
 	return r.db.WithContext(ctx).Model(&ec.Product{}).Where("id = ?", id).
 		Select("name", "short_description", "long_description", "base_price", "base_production_time_days", "category_id", "image_url",
-			"default_width", "default_height", "default_depth").
+			"default_width", "default_height", "default_depth", "base_material").
 		Updates(p).Error
 }
 

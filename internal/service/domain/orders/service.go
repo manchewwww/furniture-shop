@@ -87,6 +87,11 @@ func (s *ordersService) CreateOrder(ctx context.Context, in order_dto.CreateOrde
 			qty, _ := s.stock.FindByMaterial(ctx, p.BaseMaterial)
 			if qty < float64(it.Quantity) {
 				allInStock = false
+				if qty > 0 {
+					_ = s.stock.AdjustQuantity(ctx, p.BaseMaterial, -qty)
+				}
+			} else {
+				_ = s.stock.AdjustQuantity(ctx, p.BaseMaterial, float64(-it.Quantity))
 			}
 		} else {
 			allInStock = false
