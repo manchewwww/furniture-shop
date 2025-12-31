@@ -17,6 +17,7 @@ func NewService(repos *storage.Repository, jwtSecret string) *service.Service {
 		Catalog: sc.NewCatalogService(repos.Departments, repos.Categories, repos.Products),
 		Orders:  so.NewOrdersService(repos.Users, repos.Orders, repos.Products),
 		Admin:   sadm.NewAdminService(repos.Departments, repos.Categories, repos.Products, repos.ProductOptions),
-		Payment: sp.NewPaymentService(repos.Orders),
+		Payment: sp.NewPaymentService(repos.Orders, repos.Products, repos.Stock),
+		Cart:    so.NewCartService(repos.Carts),
 	}
 }

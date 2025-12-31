@@ -47,10 +47,12 @@ func (r *ProductRepository) Search(ctx context.Context, query string, limit int)
 
 func (r *ProductRepository) ListRecommendations(ctx context.Context, p *ec.Product, limit int) ([]ec.Product, error) {
 	var rec []ec.Product
-	if err := r.db.WithContext(ctx).
-		Where("category_id = ? AND id <> ?", p.CategoryID, p.ID).
-		Limit(limit).
-		Find(&rec).Error; err != nil {
+	q := r.db.WithContext(ctx).Model(&ec.Product{}).
+		Joins("LEFT JOIN recommendation_counters rc ON rc.product_id = products.id").
+		Where("products.category_id = ? AND products.id <> ?", p.CategoryID, p.ID).
+		Order("COALESCE(rc.count,0) DESC, products.id ASC").
+		Limit(limit)
+	if err := q.Find(&rec).Error; err != nil {
 		return nil, err
 	}
 	return rec, nil
@@ -78,4 +80,18 @@ func (r *ProductRepository) Update(ctx context.Context, id uint, p ec.Product) e
 
 func (r *ProductRepository) Delete(ctx context.Context, id uint) error {
 	return r.db.WithContext(ctx).Delete(&ec.Product{}, id).Error
+}
+
+func (r *ProductRepository) IncrementRecommendation(ctx context.Context, productID uint) error {
+	return r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
+		var rc ec.RecommendationCounter
+		if err := tx.Where("product_id = ?", productID).First(&rc).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				rc = ec.RecommendationCounter{ProductID: productID, Count: 1}
+				return tx.Create(&rc).Error
+			}
+			return err
+		}
+		return tx.Model(&rc).UpdateColumn("count", gorm.Expr("count + 1")).Error
+	})
 }

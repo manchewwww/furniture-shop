@@ -55,6 +55,8 @@ func AutoMigrateAndSeed() error {
 		&eu.User{},
 		&eo.Order{},
 		&eo.OrderItem{},
+		&eo.Cart{},
+		&eo.CartItem{},
 		&ei.Stock{},
 		&ec.RecommendationCounter{},
 	); err != nil {

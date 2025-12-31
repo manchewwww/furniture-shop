@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 
+	"furniture-shop/internal/dtos/cart"
 	order_dto "furniture-shop/internal/dtos/orders"
 	ec "furniture-shop/internal/entities/catalog"
 	eo "furniture-shop/internal/entities/orders"
@@ -55,10 +56,20 @@ type PaymentService interface {
 	ProcessPaymentResult(ctx context.Context, orderID uint, paymentStatus, orderStatus string) error
 }
 
+type CartService interface {
+	Get(ctx context.Context, userID uint) (*eo.Cart, error)
+	Replace(ctx context.Context, userID uint, in cart.ReplaceCartRequest) (*eo.Cart, error)
+	AddItem(ctx context.Context, userID uint, in cart.AddCartItemRequest) (*eo.CartItem, error)
+	UpdateItem(ctx context.Context, userID uint, itemID uint, in cart.UpdateCartItemRequest) error
+	RemoveItem(ctx context.Context, userID uint, itemID uint) error
+	Clear(ctx context.Context, userID uint) error
+}
+
 type Service struct {
 	Auth    AuthService
 	Catalog CatalogService
 	Orders  OrdersService
 	Admin   AdminService
 	Payment PaymentService
+	Cart    CartService
 }
